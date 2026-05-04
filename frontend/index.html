@@ -904,7 +904,9 @@ select option { background: #1a2540; color: var(--text-primary); }
    全局状态
 ══════════════════════════════════════════════ */
 let profilesData = null;
-const API = 'http://127.0.0.1:8001';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8001'
+  : '';
 
 const MODULE_CONFIG = {
   decoration:    { icon: '🎨', label: '内装修防火' },
