@@ -33,5 +33,5 @@ BUILDING_CONTEXT = {
 }
 
 # ── 服务端口 ────────────────────────────────────────────────────
-HOST: str = "127.0.0.1"
-PORT: int = 8000
+HOST: str = os.getenv("HOST", "0.0.0.0")
+PORT: int = int(os.getenv("PORT", "8000"))
