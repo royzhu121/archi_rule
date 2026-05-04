@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消防审图系统 · FireCheck Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   CSS 变量 & 重置
+══════════════════════════════════════════════ */
+:root {
+  --bg-primary:    #070C18;
+  --bg-secondary:  #0D1526;
+  --bg-card:       rgba(15, 24, 45, 0.8);
+  --bg-input:      rgba(255,255,255,0.04);
+  --bg-input-hover:rgba(255,255,255,0.07);
+
+  --border:        rgba(255,255,255,0.07);
+  --border-active: rgba(0,212,255,0.4);
+
+  --cyan:    #00D4FF;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --purple:  #A855F7;
+  --purple-dim: rgba(168,85,247,0.12);
+
+  --green:   #10B981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber:   #F59E0B;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red:     #EF4444;
+  --red-dim: rgba(239,68,68,0.12);
+
+  --text-primary:   #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted:     #475569;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-glow-cyan: 0 0 20px rgba(0,212,255,0.15);
+  --shadow-glow-purple: 0 0 20px rgba(168,85,247,0.15);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 全局背景网格 */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════
+   顶部 Header
+══════════════════════════════════════════════ */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(7,12,24,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px; font-weight: 700;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.logo-sub {
+  font-size: 11px; color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+}
+.header-right {
+  display: flex; align-items: center; gap: 16px;
+}
+.badge-building {
+  font-size: 11px; color: var(--cyan);
+  background: var(--cyan-dim);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.status-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.status-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ══════════════════════════════════════════════
+   主布局
+══════════════════════════════════════════════ */
+.app-layout {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 64px);
+}
+
+/* ══════════════════════════════════════════════
+   左侧 - 输入面板
+══════════════════════════════════════════════ */
+.input-panel {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+  position: sticky; top: 64px; height: calc(100vh - 64px);
+}
+.input-panel::-webkit-scrollbar { width: 4px; }
+.input-panel::-webkit-scrollbar-track { background: transparent; }
+.input-panel::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* 分区标题 */
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.section-number {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  letter-spacing: 0.02em;
+  flex: 1;
+}
+.section-chevron {
+  color: var(--text-muted); font-size: 12px;
+  transition: transform var(--transition);
+}
+.section-card.collapsed .section-chevron { transform: rotate(-90deg); }
+.section-body { display: flex; flex-direction: column; gap: 10px; }
+.section-card.collapsed .section-body { display: none; }
+
+/* 卡片 */
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--transition);
+}
+.section-card:hover { border-color: rgba(255,255,255,0.12); }
+
+/* 表单元素 */
+.form-row {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.form-row.row-2 {
+  flex-direction: row; gap: 10px;
+}
+.form-row.row-2 > * { flex: 1; }
+label {
+  font-size: 11px; font-weight: 500;
+  color: var(--text-secondary); letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: all var(--transition);
+  appearance: none;
+}
+input:focus, select:focus {
+  border-color: var(--border-active);
+  background: var(--bg-input-hover);
+  box-shadow: var(--shadow-glow-cyan);
+}
+input:hover, select:hover {
+  background: var(--bg-input-hover);
+}
+select option { background: #1a2540; color: var(--text-primary); }
+
+/* 自定义 select 箭头 */
+.select-wrapper {
+  position: relative;
+}
+.select-wrapper select { padding-right: 32px; }
+.select-wrapper::after {
+  content: '▾';
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted); font-size: 12px;
+  pointer-events: none;
+}
+
+/* 影响项复选框 */
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.check-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+}
+.check-item:hover {
+  background: var(--bg-input-hover);
+  border-color: rgba(255,255,255,0.12);
+}
+.check-item.active {
+  background: rgba(0,212,255,0.06);
+  border-color: rgba(0,212,255,0.3);
+}
+.check-item.danger.active {
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.3);
+}
+.check-item input[type="checkbox"] { display: none; }
+.check-box {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  font-size: 10px;
+}
+.check-item.active .check-box {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: #000;
+}
+.check-item.danger.active .check-box {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.check-label {
+  font-size: 12px; color: var(--text-secondary);
+  line-height: 1.3;
+}
+.check-item.active .check-label { color: var(--text-primary); }
+
+/* 危险安全阀开关 */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.toggle-row:hover { background: var(--bg-input-hover); }
+.toggle-row.danger.active {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.4);
+}
+.toggle-label { font-size: 12px; color: var(--text-secondary); }
+.toggle-switch {
+  width: 32px; height: 18px;
+  background: var(--text-muted);
+  border-radius: 9px;
+  position: relative;
+  transition: background var(--transition);
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  background: #fff; border-radius: 50%;
+  transition: transform var(--transition);
+}
+.toggle-row.active .toggle-switch { background: var(--cyan); }
+.toggle-row.danger.active .toggle-switch { background: var(--red); }
+.toggle-row.active .toggle-switch::after { transform: translateX(14px); }
+
+/* 提交按钮 */
+.submit-btn {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border: none; border-radius: var(--radius-md);
+  color: #000; font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.05em;
+  transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.submit-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity var(--transition);
+}
+.submit-btn:hover::before { opacity: 1; }
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,255,0.3); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled {
+  opacity: 0.5; cursor: not-allowed;
+  background: var(--text-muted);
+  transform: none; box-shadow: none;
+}
+.submit-btn.loading::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 18px; height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════
+   右侧 - 结果面板
+══════════════════════════════════════════════ */
+.results-panel {
+  padding: 24px 28px;
+  overflow-y: auto;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%;
+  min-height: 500px;
+  gap: 20px; opacity: 0.6;
+}
+.empty-icon {
+  font-size: 64px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.empty-text {
+  font-size: 16px; color: var(--text-secondary);
+  font-family: 'Space Grotesk', sans-serif;
+}
+.empty-sub {
+  font-size: 13px; color: var(--text-muted);
+  text-align: center; max-width: 320px; line-height: 1.6;
+}
+
+/* 结果区 */
+.results-content { display: flex; flex-direction: column; gap: 16px; }
+
+/* 总结论 Banner */
+.verdict-banner {
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  border: 1px solid;
+  animation: slideIn 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.verdict-banner.manual {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.3);
+}
+.verdict-banner.violation {
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.3);
+}
+.verdict-banner.pass {
+  background: rgba(16,185,129,0.08);
+  border-color: rgba(16,185,129,0.3);
+}
+.verdict-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.verdict-icon { font-size: 24px; }
+.verdict-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px; font-weight: 700;
+}
+.verdict-banner.manual .verdict-title { color: var(--red); }
+.verdict-banner.violation .verdict-title { color: var(--amber); }
+.verdict-banner.pass .verdict-title { color: var(--green); }
+.verdict-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.manual-reasons { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.manual-reason-item {
+  font-size: 12px; color: var(--red);
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px; padding: 6px 10px;
+}
+
+/* 高亮汇总 */
+.highlights-section {
+  background: var(--bg-card);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  animation: slideIn 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+.highlights-title {
+  font-size: 12px; font-weight: 600;
+  color: var(--amber); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.highlight-list { display: flex; flex-direction: column; gap: 6px; }
+.highlight-item {
+  font-size: 12px; line-height: 1.5;
+  padding: 7px 10px;
+  border-radius: 6px;
+}
+.highlight-item.critical {
+  background: rgba(239,68,68,0.08); color: #FCA5A5;
+  border-left: 2px solid var(--red);
+}
+.highlight-item.warning {
+  background: rgba(245,158,11,0.08); color: #FCD34D;
+  border-left: 2px solid var(--amber);
+}
+
+/* 专业模块卡片 */
+.modules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.module-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  transition: all var(--transition);
+  animation: slideIn 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.module-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.module-card.status-violation {
+  border-color: rgba(239,68,68,0.3);
+  box-shadow: 0 0 16px rgba(239,68,68,0.08);
+}
+.module-card.status-warning {
+  border-color: rgba(245,158,11,0.25);
+}
+.module-card.status-pass {
+  border-color: rgba(16,185,129,0.2);
+}
+
+.module-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: all var(--transition);
+}
+.module-card.expanded .module-header {
+  border-bottom-color: var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.module-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.status-violation .module-status-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.status-warning .module-status-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.status-pass .module-status-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+.module-name {
+  font-size: 12px; font-weight: 600; flex: 1;
+  color: var(--text-primary); letter-spacing: 0.02em;
+}
+.module-badge {
+  font-size: 10px; padding: 2px 8px;
+  border-radius: 10px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.status-violation .module-badge { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+.status-warning .module-badge { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+.status-pass .module-badge { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+
+.module-chevron { color: var(--text-muted); font-size: 11px; transition: transform var(--transition); }
+.module-card.expanded .module-chevron { transform: rotate(180deg); }
+
+.module-summary {
+  padding: 10px 16px;
+  font-size: 11px; color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--border);
+  background: var(--cyan-dim);
+}
+
+.module-body {
+  padding: 14px 16px;
+  display: none; flex-direction: column; gap: 10px;
+}
+.module-card.expanded .module-body { display: flex; }
+
+.detail-line {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.7;
+  white-space: pre-wrap;
+}
+.detail-line.calc {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--cyan); background: var(--cyan-dim);
+  padding: 8px 10px; border-radius: 6px;
+}
+
+.impact-section { margin-top: 4px; }
+.impact-title {
+  font-size: 10px; font-weight: 600; color: var(--amber);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+}
+.impact-item {
+  font-size: 11px; padding: 6px 8px; border-radius: 6px;
+  margin-bottom: 4px; line-height: 1.5;
+}
+.impact-item.critical { background: rgba(239,68,68,0.08); color: #FCA5A5; border-left: 2px solid var(--red); }
+.impact-item.warning { background: rgba(245,158,11,0.08); color: #FCD34D; border-left: 2px solid var(--amber); }
+.impact-item.info { background: rgba(0,212,255,0.05); color: var(--text-secondary); border-left: 2px solid rgba(0,212,255,0.3); }
+
+.suggestion-section { margin-top: 4px; }
+.suggestion-title {
+  font-size: 10px; font-weight: 600; color: var(--purple);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+}
+.suggestion-item {
+  font-size: 11px; color: #C4B5FD;
+  background: var(--purple-dim);
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 6px; padding: 6px 8px; margin-bottom: 4px; line-height: 1.5;
+}
+
+.refs-section { margin-top: 4px; }
+.refs-title {
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+}
+.ref-item {
+  font-size: 11px; color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 8px; margin-bottom: 4px; line-height: 1.5;
+  cursor: pointer; transition: all var(--transition);
+}
+.ref-item:hover {
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  border-color: rgba(255,255,255,0.12);
+}
+.ref-item .ref-id { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+/* GLM意见 */
+.llm-section {
+  background: var(--bg-card);
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  animation: slideIn 0.6s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+.llm-section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--purple), var(--cyan));
+}
+.llm-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.llm-badge {
+  font-size: 10px; padding: 3px 8px;
+  background: var(--purple-dim); color: var(--purple);
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+}
+.llm-title {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+}
+.llm-body {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.8; white-space: pre-wrap;
+}
+.llm-loading {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text-muted); font-size: 13px;
+}
+.llm-loading::before {
+  content: '';
+  width: 16px; height: 16px;
+  border: 2px solid rgba(168,85,247,0.2);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* 计算结果展示 */
+.calc-block {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  line-height: 1.7;
+}
+
+/* 加载骨架 */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .modules-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .input-panel { position: static; height: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Header ══ -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🔥</div>
+    <div>
+      <div class="logo-text">FireCheck Pro</div>
+      <div class="logo-sub">租户二次消防审图系统 v1.0</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge-building">耐火等级一级 · 多层商业综合体</div>
+    <div class="status-dot" id="statusDot">系统就绪</div>
+  </div>
+</header>
+
+<!-- ══ 主布局 ══ -->
+<div class="app-layout">
+
+  <!-- ══ 左侧：输入面板 ══ -->
+  <aside class="input-panel">
+
+    <!-- § 1 项目基本信息 -->
+    <div class="section-card" id="sec1">
+      <div class="section-header" onclick="toggleSection('sec1')">
+        <div class="section-number">1</div>
+        <div class="section-title">项目基本信息</div>
+        <div class="section-chevron">▾</div>
+      </div>
+      <div class="section-body">
+        <div class="form-row row-2">
+          <div class="form-row">
+            <label>站点</label>
+            <input type="text" id="site" value="南宁宜家" placeholder="站点名称">
+          </div>
+          <div class="form-row">
+            <label>楼层</label>
+            <div class="select-wrapper">
+              <select id="floor">
+                <option>B2</option>
+                <option>B1</option>
+                <option value="1F" selected>1F</option>
+                <option>2F</option>
+                <option>3F</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- § 2 空间与业态属性 -->
+    <div class="section-card" id="sec2">
+      <div class="section-header" onclick="toggleSection('sec2')">
+        <div class="section-number">2</div>
+        <div class="section-title">空间与业态属性</div>
+        <div class="section-chevron">▾</div>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>一级业态</label>
+          <div class="select-wrapper">
+            <select id="tenant1" onchange="updateTenant2()">
+              <option value="">── 请选择 ──</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>二级业态</label>
+          <div class="select-wrapper">
+            <select id="tenant2" onchange="onTenant2Change()">
+              <option value="">── 请先选择一级业态 ──</option>
+            </select>
+          </div>
+        </div>
+        <!-- 业态风险提示 -->
+        <div id="riskBadge" style="display:none; padding:8px 10px; border-radius:6px; font-size:12px;"></div>
+
+        <div class="form-row row-2">
+          <div class="form-row">
+            <label>房间面积 (㎡)</label>
+            <input type="number" id="area" value="200" min="1" step="1" placeholder="㎡">
+          </div>
+          <div class="form-row">
+            <label>净空高度 (m)</label>
+            <input type="number" id="ceilingHeight" value="3.5" min="1" step="0.1" placeholder="m">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>吊顶类型</label>
+          <div class="select-wrapper">
+            <select id="ceilingType">
+              <option value="封闭式吊顶">封闭式吊顶</option>
+              <option value="通透吊顶，通透率>70%">通透吊顶，通透率&gt;70%</option>
+              <option value="通透吊顶，通透率≤70%">通透吊顶，通透率≤70%</option>
+              <option value="无吊顶">无吊顶</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>房间最长边 (m，选填，用于排烟距离校核)</label>
+          <input type="number" id="roomLength" value="0" min="0" step="0.5" placeholder="0 = 未知">
+        </div>
+      </div>
+    </div>
+
+    <!-- § 3 安全阀 -->
+    <div class="section-card" id="sec3">
+      <div class="section-header" onclick="toggleSection('sec3')">
+        <div class="section-number">3</div>
+        <div class="section-title">报警与疏散前置条件</div>
+        <div class="section-chevron">▾</div>
+      </div>
+      <div class="section-body">
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">以下任一勾选将触发转人工复核</div>
+        <div class="toggle-row danger" id="tg_fireZone" onclick="toggleDanger('fireZone', this)">
+          <span class="toggle-label">改变了原防火分区主边界</span>
+          <div class="toggle-switch"></div>
+          <input type="checkbox" id="fireZone" style="display:none">
+        </div>
+        <div class="toggle-row danger" id="tg_smokeZone" onclick="toggleDanger('smokeZone', this)">
+          <span class="toggle-label">改变了原防烟分区主边界</span>
+          <div class="toggle-switch"></div>
+          <input type="checkbox" id="smokeZone" style="display:none">
+        </div>
+        <div class="toggle-row danger" id="tg_complexSpace" onclick="toggleDanger('complexSpace', this)">
+          <span class="toggle-label">涉及中庭/步行街/异形大空间</span>
+          <div class="toggle-switch"></div>
+          <input type="checkbox" id="complexSpace" style="display:none">
+        </div>
+      </div>
+    </div>
+
+    <!-- § 4 影响项/改造项 -->
+    <div class="section-card" id="sec4">
+      <div class="section-header" onclick="toggleSection('sec4')">
+        <div class="section-number">4</div>
+        <div class="section-title">影响项 / 改造项</div>
+        <div class="section-chevron">▾</div>
+      </div>
+      <div class="section-body">
+        <div class="impact-grid">
+          <div class="check-item" onclick="toggleCheck(this, 'newWall')">
+            <input type="checkbox" id="newWall">
+            <div class="check-box">✓</div>
+            <span class="check-label">新增隔墙/墙体</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this, 'wallToCeiling')">
+            <input type="checkbox" id="wallToCeiling">
+            <div class="check-box">✓</div>
+            <span class="check-label">隔墙到顶</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this, 'newEnclosedRoom')">
+            <input type="checkbox" id="newEnclosedRoom">
+            <div class="check-box">✓</div>
+            <span class="check-label">新增封闭房间</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this, 'highShelves')">
+            <input type="checkbox" id="highShelves">
+            <div class="check-box">✓</div>
+            <span class="check-label">高柜/高货架</span>
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--red); margin:8px 0 4px; letter-spacing:0.05em;">遮挡类（严重违规）</div>
+        <div class="impact-grid">
+          <div class="check-item danger" onclick="toggleCheck(this, 'blockSprinkler')">
+            <input type="checkbox" id="blockSprinkler">
+            <div class="check-box">✓</div>
+            <span class="check-label">遮挡喷头</span>
+          </div>
+          <div class="check-item danger" onclick="toggleCheck(this, 'blockDetector')">
+            <input type="checkbox" id="blockDetector">
+            <div class="check-box">✓</div>
+            <span class="check-label">遮挡探测器</span>
+          </div>
+          <div class="check-item danger" onclick="toggleCheck(this, 'blockSmokeVent')">
+            <input type="checkbox" id="blockSmokeVent">
+            <div class="check-box">✓</div>
+            <span class="check-label">遮挡排烟口</span>
+          </div>
+          <div class="check-item danger" onclick="toggleCheck(this, 'blockHydrant')">
+            <input type="checkbox" id="blockHydrant">
+            <div class="check-box">✓</div>
+            <span class="check-label">遮挡消火栓</span>
+          </div>
+          <div class="check-item danger" onclick="toggleCheck(this, 'blockEvacSign')">
+            <input type="checkbox" id="blockEvacSign">
+            <div class="check-box">✓</div>
+            <span class="check-label">遮挡疏散标志</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提交 -->
+    <button class="submit-btn" id="submitBtn" onclick="submitReview()">
+      开始审图
+    </button>
+
+  </aside>
+
+  <!-- ══ 右侧：结果面板 ══ -->
+  <main class="results-panel" id="resultsPanel">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🏗️</div>
+      <div class="empty-text">填写左侧参数，点击「开始审图」</div>
+      <div class="empty-sub">系统将基于规范条文进行六大专业模块审查，并由 GLM 生成综合意见</div>
+    </div>
+    <div class="results-content" id="resultsContent" style="display:none;"></div>
+  </main>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   全局状态
+══════════════════════════════════════════════ */
+let profilesData = null;
+const API = 'http://127.0.0.1:8001';
+
+const MODULE_CONFIG = {
+  decoration:    { icon: '🎨', label: '内装修防火' },
+  sprinkler:     { icon: '💧', label: '自动喷水灭火' },
+  smoke_exhaust: { icon: '💨', label: '防烟排烟' },
+  alarm:         { icon: '🔔', label: '火灾自动报警' },
+  evacuation:    { icon: '🚪', label: '应急照明疏散指示' },
+  hydrant:       { icon: '🧯', label: '消火栓及灭火器' },
+};
+
+const STATUS_LABELS = {
+  pass: '合规',
+  warning: '注意',
+  violation: '违规',
+  manual: '转人工',
+};
+
+/* ══════════════════════════════════════════════
+   初始化
+══════════════════════════════════════════════ */
+async function init() {
+  try {
+    const res = await fetch(`${API}/api/tenant-profiles`);
+    profilesData = await res.json();
+    populateTenant1();
+    setStatus('系统就绪', 'green');
+  } catch(e) {
+    setStatus('后端离线', 'red');
+    console.warn('无法连接后端，请先运行 run.py', e);
+    // 使用本地数据兜底
+    profilesData = getLocalProfiles();
+    populateTenant1();
+  }
+}
+
+function getLocalProfiles() {
+  return {
+    level1_options: ['普通商业零售类','餐饮（不使用明火）','餐饮（使用明火）','娱乐体验类','儿童及教培类','运动休闲类','生活服务及配套'],
+    level1_to_level2: {
+      '普通商业零售类': ['服装/鞋履/箱包/化妆品/珠宝/钟表','便利店/超市（无明火）'],
+      '餐饮（不使用明火）': ['中餐（无明火）','西餐（无明火）','中央厨房复热餐厅'],
+      '餐饮（使用明火）': ['中餐/西餐（明火）','火锅/烧烤'],
+      '娱乐体验类': ['电影院','KTV/电竞馆/密室逃脱/剧本杀'],
+      '儿童及教培类': ['儿童乐园','儿童培训/亲子'],
+      '运动休闲类': ['健身房/瑜伽/攀岩'],
+      '生活服务及配套': ['银行/美容美发/后勤/仓储/设备'],
+    },
+    profiles: {}
+  };
+}
+
+function setStatus(text, color) {
+  const dot = document.getElementById('statusDot');
+  dot.textContent = text;
+  dot.style.color = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : 'var(--text-secondary)';
+}
+
+/* ══════════════════════════════════════════════
+   业态下拉菜单
+══════════════════════════════════════════════ */
+function populateTenant1() {
+  const sel = document.getElementById('tenant1');
+  sel.innerHTML = '<option value="">── 请选择 ──</option>';
+  profilesData.level1_options.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt;
+    sel.appendChild(o);
+  });
+}
+
+function updateTenant2() {
+  const l1 = document.getElementById('tenant1').value;
+  const sel = document.getElementById('tenant2');
+  sel.innerHTML = '';
+  if (!l1 || !profilesData.level1_to_level2[l1]) {
+    sel.innerHTML = '<option value="">── 请先选择一级业态 ──</option>';
+    return;
+  }
+  profilesData.level1_to_level2[l1].forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt;
+    sel.appendChild(o);
+  });
+  onTenant2Change();
+}
+
+function onTenant2Change() {
+  const t2 = document.getElementById('tenant2').value;
+  const badge = document.getElementById('riskBadge');
+  if (!t2 || !profilesData.profiles[t2]) { badge.style.display = 'none'; return; }
+  const p = profilesData.profiles[t2];
+  const isAuto = p.auto_review;
+  badge.style.display = 'block';
+  if (!isAuto) {
+    badge.style.background = 'rgba(239,68,68,0.08)';
+    badge.style.border = '1px solid rgba(239,68,68,0.3)';
+    badge.style.color = '#FCA5A5';
+    badge.textContent = '⚠ 该业态将触发转人工复核';
+  } else {
+    const riskColors = { low: 'var(--green)', medium_low: 'var(--amber)', medium: 'var(--amber)' };
+    badge.style.background = 'rgba(16,185,129,0.06)';
+    badge.style.border = '1px solid rgba(16,185,129,0.2)';
+    badge.style.color = 'var(--green)';
+    badge.textContent = `✓ 可自动审查 · 喷淋危险等级：${p.sprinkler_hazard || '中危险级I'}`;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   UI 交互
+══════════════════════════════════════════════ */
+function toggleSection(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('collapsed');
+}
+
+function toggleCheck(el, id) {
+  const cb = document.getElementById(id);
+  cb.checked = !cb.checked;
+  el.classList.toggle('active', cb.checked);
+}
+
+function toggleDanger(id, el) {
+  const cb = document.getElementById(id);
+  cb.checked = !cb.checked;
+  el.classList.toggle('active', cb.checked);
+}
+
+/* ══════════════════════════════════════════════
+   提交审图
+══════════════════════════════════════════════ */
+async function submitReview() {
+  const btn = document.getElementById('submitBtn');
+  const area = parseFloat(document.getElementById('area').value);
+  const t1 = document.getElementById('tenant1').value;
+  const t2 = document.getElementById('tenant2').value;
+
+  if (!t1 || !t2) { alert('请选择业态类型'); return; }
+  if (!area || area <= 0) { alert('请输入有效的房间面积'); return; }
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = '';
+  setStatus('审查中…', 'amber');
+
+  const payload = {
+    site: document.getElementById('site').value || '南宁宜家',
+    floor: document.getElementById('floor').value,
+    tenant_type_1: t1,
+    tenant_type_2: t2,
+    area: area,
+    ceiling_type: document.getElementById('ceilingType').value,
+    ceiling_height: parseFloat(document.getElementById('ceilingHeight').value) || 3.5,
+    room_max_length: parseFloat(document.getElementById('roomLength').value) || 0,
+    change_fire_zone: document.getElementById('fireZone').checked,
+    change_smoke_zone: document.getElementById('smokeZone').checked,
+    complex_space: document.getElementById('complexSpace').checked,
+    new_wall: document.getElementById('newWall').checked,
+    wall_to_ceiling: document.getElementById('wallToCeiling').checked,
+    new_enclosed_room: document.getElementById('newEnclosedRoom').checked,
+    high_shelves: document.getElementById('highShelves').checked,
+    block_sprinkler: document.getElementById('blockSprinkler').checked,
+    block_detector: document.getElementById('blockDetector').checked,
+    block_smoke_vent: document.getElementById('blockSmokeVent').checked,
+    block_hydrant: document.getElementById('blockHydrant').checked,
+    block_evacuation_sign: document.getElementById('blockEvacSign').checked,
+  };
+
+  try {
+    const res = await fetch(`${API}/api/review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    renderResults(data);
+    setStatus('审查完成', 'green');
+  } catch (e) {
+    setStatus('请求失败', 'red');
+    renderError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = '重新审图';
+  }
+}
+
+/* ══════════════════════════════════════════════
+   渲染结果
+══════════════════════════════════════════════ */
+function renderResults(data) {
+  document.getElementById('emptyState').style.display = 'none';
+  const content = document.getElementById('resultsContent');
+  content.style.display = 'flex';
+  content.innerHTML = '';
+
+  // 1. 总结论 Banner
+  content.appendChild(buildVerdictBanner(data));
+
+  // 2. 高亮汇总（如有影响项）
+  if (data.highlights && data.highlights.length > 0) {
+    content.appendChild(buildHighlights(data.highlights));
+  }
+
+  // 3. 专业模块 (仅非人工复核时)
+  if (!data.requires_manual && data.modules) {
+    const grid = document.createElement('div');
+    grid.className = 'modules-grid';
+    Object.entries(data.modules).forEach(([key, mod]) => {
+      grid.appendChild(buildModuleCard(key, mod));
+    });
+    content.appendChild(grid);
+  }
+
+  // 4. GLM意见
+  if (data.llm_opinion) {
+    content.appendChild(buildLLMSection(data.llm_opinion));
+  }
+
+  // 滚动到顶
+  document.getElementById('resultsPanel').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildVerdictBanner(data) {
+  const div = document.createElement('div');
+  let cls, icon, title;
+  if (data.requires_manual) {
+    cls = 'manual'; icon = '🔴'; title = '须转人工复核';
+  } else if (data.overall_status === 'violation') {
+    cls = 'violation'; icon = '⚠️'; title = '存在违规项 — 须立即整改';
+  } else {
+    cls = 'pass'; icon = '✅'; title = '初步审查完成';
+  }
+  div.className = `verdict-banner ${cls}`;
+  div.innerHTML = `
+    <div class="verdict-header">
+      <span class="verdict-icon">${icon}</span>
+      <span class="verdict-title">${title}</span>
+    </div>
+    <div class="verdict-body">${escHtml(data.overall_summary)}</div>
+    ${data.manual_reasons && data.manual_reasons.length > 0 ? `
+      <div class="manual-reasons">
+        ${data.manual_reasons.map(r => `<div class="manual-reason-item">• ${escHtml(r)}</div>`).join('')}
+      </div>` : ''}
+  `;
+  return div;
+}
+
+function buildHighlights(highlights) {
+  const div = document.createElement('div');
+  div.className = 'highlights-section';
+  div.innerHTML = `
+    <div class="highlights-title">⚡ 影响项汇总</div>
+    <div class="highlight-list">
+      ${highlights.map(h => {
+        const cls = h.includes('🚨') ? 'critical' : 'warning';
+        return `<div class="highlight-item ${cls}">${escHtml(h)}</div>`;
+      }).join('')}
+    </div>
+  `;
+  return div;
+}
+
+function buildModuleCard(key, mod) {
+  const cfg = MODULE_CONFIG[key] || { icon: '📋', label: mod.module_name };
+  const statusCls = `status-${mod.status}`;
+  const statusLabel = STATUS_LABELS[mod.status] || mod.status;
+  const cardId = `mod_${key}`;
+
+  const card = document.createElement('div');
+  card.className = `module-card ${statusCls}`;
+  card.id = cardId;
+
+  // Header
+  card.innerHTML = `
+    <div class="module-header" onclick="toggleModule('${cardId}')">
+      <div class="module-status-dot"></div>
+      <span style="font-size:14px">${cfg.icon}</span>
+      <span class="module-name">${mod.module_name}</span>
+      <span class="module-badge">${statusLabel}</span>
+      <span class="module-chevron">▾</span>
+    </div>
+    <div class="module-summary">${escHtml(mod.summary)}</div>
+    <div class="module-body">
+      ${buildDetailsHTML(mod)}
+      ${mod.impacts && mod.impacts.length > 0 ? buildImpactsHTML(mod.impacts) : ''}
+      ${mod.suggestions && mod.suggestions.length > 0 ? buildSuggestionsHTML(mod.suggestions) : ''}
+      ${mod.references && mod.references.length > 0 ? buildRefsHTML(mod.references) : ''}
+    </div>
+  `;
+
+  // 有违规的卡片默认展开
+  if (mod.status === 'violation') {
+    card.classList.add('expanded');
+  }
+
+  return card;
+}
+
+function buildDetailsHTML(mod) {
+  if (!mod.details || mod.details.length === 0) return '';
+  // 检测计算步骤行（含①②③④⑤）
+  const lines = mod.details.map(line => {
+    const isCalc = /[①②③④⑤⑥⑦]|step|计算/.test(line.toLowerCase());
+    return `<div class="detail-line ${isCalc ? 'calc' : ''}">${escHtml(line)}</div>`;
+  }).join('');
+  return `<div>${lines}</div>`;
+}
+
+function buildImpactsHTML(impacts) {
+  return `
+    <div class="impact-section">
+      <div class="impact-title">▲ 影响项提醒</div>
+      ${impacts.map(i => {
+        const cls = i.includes('🚨') ? 'critical' : i.includes('⚠') ? 'warning' : 'info';
+        return `<div class="impact-item ${cls}">${escHtml(i)}</div>`;
+      }).join('')}
+    </div>`;
+}
+
+function buildSuggestionsHTML(suggestions) {
+  return `
+    <div class="suggestion-section">
+      <div class="suggestion-title">◆ 整改建议</div>
+      ${suggestions.map(s => `<div class="suggestion-item">→ ${escHtml(s)}</div>`).join('')}
+    </div>`;
+}
+
+function buildRefsHTML(refs) {
+  return `
+    <div class="refs-section">
+      <div class="refs-title">§ 规范依据</div>
+      ${refs.map(r => `
+        <div class="ref-item" title="${escHtml(r.excerpt)}">
+          <span class="ref-id">${escHtml(r.standard)} §${escHtml(r.article)}</span>
+          &nbsp;${escHtml(r.title)}
+        </div>`).join('')}
+    </div>`;
+}
+
+function buildLLMSection(opinion) {
+  const div = document.createElement('div');
+  div.className = 'llm-section';
+  div.innerHTML = `
+    <div class="llm-header">
+      <span class="llm-badge">GLM-4-PLUS</span>
+      <span class="llm-title">AI 综合审查意见</span>
+    </div>
+    <div class="llm-body">${escHtml(opinion)}</div>
+  `;
+  return div;
+}
+
+function renderError(msg) {
+  document.getElementById('emptyState').style.display = 'none';
+  const content = document.getElementById('resultsContent');
+  content.style.display = 'flex';
+  content.innerHTML = `
+    <div style="background:var(--red-dim);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);padding:20px;">
+      <div style="color:var(--red);font-weight:600;margin-bottom:8px;">请求失败</div>
+      <div style="font-size:12px;color:var(--text-secondary);font-family:JetBrains Mono,monospace;">${escHtml(msg)}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:12px;">请确认后端服务已启动：运行 python run.py</div>
+    </div>
+  `;
+}
+
+/* ══════════════════════════════════════════════
+   模块卡片展开/收起
+══════════════════════════════════════════════ */
+function toggleModule(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('expanded');
+}
+
+/* ══════════════════════════════════════════════
+   工具函数
+══════════════════════════════════════════════ */
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>
