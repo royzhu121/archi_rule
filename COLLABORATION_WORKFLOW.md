@@ -12,14 +12,20 @@
 ## 日常步骤
 
 1. 只在 07 协同版目录修改代码。
-2. 本地验证完成后，在项目根目录运行：
+2. 开始新一轮修改前，先同步 Roy 最新代码：
+
+```powershell
+.\pull_from_roy.ps1
+```
+
+3. 本地验证完成后，在项目根目录运行：
 
 ```powershell
 .\push_to_roy_pr.ps1
 ```
 
-3. 脚本会自动推送到 `upstream` 新分支，并创建 PR。
-4. 在 GitHub 上检查 PR 内容，再通知 Roy 审阅或合并。
+4. 脚本会自动推送到 `upstream` 新分支，并创建 PR。
+5. 在 GitHub 上检查 PR 内容，再通知 Roy 审阅或合并。
 
 ## 注意事项
 
@@ -38,9 +44,13 @@ git remote -v
 拉取 Roy 最新代码：
 
 ```powershell
-git fetch upstream
-git checkout main
-git merge upstream/main
+.\pull_from_roy.ps1
+```
+
+仅抓取 Roy 最新代码但不合并：
+
+```powershell
+.\pull_from_roy.ps1 -FetchOnly
 ```
 
 仅推送到你的私有仓库：
