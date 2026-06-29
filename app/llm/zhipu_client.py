@@ -74,6 +74,7 @@ def _build_user_prompt(req: ReviewRequest, result: ReviewResult) -> str:
 
 【项目信息】
 站点：{req.site} / 楼层：{req.floor}
+租户名称：{req.tenant_name or "未填写"}
 业态：{req.tenant_type_1} > {req.tenant_type_2}
 建筑面积：{req.area}㎡ / 净空高度：{req.ceiling_height}m / 吊顶类型：{req.ceiling_type}
 

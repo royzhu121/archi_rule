@@ -1,5 +1,13 @@
 # 🔥 FireCheck Pro
 
+## 当前唯一维护目录
+
+自 2026-06-29 起，本项目后续调试、修改、提交统一仅在以下目录进行：
+
+`My tasks/07-租户二消审图（协同版本）/archi_rule-main`
+
+工作区内其他 `archi_rule` / `archi_rule-main` 副本均视为历史归档，不再继续维护。
+
 **租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 智谱 GLM
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
@@ -12,7 +20,7 @@
 
 FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户二次装修**消防快速审查场景而设计。输入租户业态与改造信息，系统自动输出六大消防专业的审查结论、整改建议与规范依据，并由智谱 GLM 生成综合审查意见。
 
-> **目标覆盖约 80% 的常规租户场景，不替代完整人工审图。**
+> 本工具用于辅助快速审查，不代替完整人工审图。
 
 ---
 
@@ -119,8 +127,8 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/royzhu121/archi_rule.git
-cd archi_rule
+git clone https://github.com/Tingtinggogogo/firecheck-pro-archi-rule.git
+cd firecheck-pro-archi-rule
 ```
 
 ### 2. 安装依赖
@@ -152,14 +160,19 @@ ZHIPU_MODEL=glm-4-plus
 python run.py
 ```
 
-访问 `http://localhost:8000` 即可使用。
+启动后优先访问：
+
+- `http://localhost:8000`
+- `http://127.0.0.1:8000`
+
+若某些环境中 `localhost` 被代理或解析异常，请使用 `127.0.0.1`。
 
 ---
 
 ## 项目结构
 
 ```
-archi_rule/
+archi_rule-main/
 ├── app/
 │   ├── llm/
 │   │   └── zhipu_client.py       # 智谱 GLM 调用

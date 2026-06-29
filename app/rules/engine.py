@@ -11,7 +11,7 @@ import os
 from typing import Optional
 
 from app.models import ReviewRequest, ReviewResult, ModuleResult, ArticleRef
-from app.rules.tenant_profiles import get_profile, is_auto_reviewable
+from app.rules.tenant_profiles import get_profile
 
 # 加载条文库
 _ARTICLES_PATH = os.path.join(os.path.dirname(__file__), "..", "standards", "articles.json")
@@ -36,25 +36,76 @@ def _refs(*ids: str) -> list[ArticleRef]:
     return [ref for i in ids if (ref := _article(i)) is not None]
 
 
-# ═══════════════════════════════════════════════════════════
-#  触发人工复核检查
-# ═══════════════════════════════════════════════════════════
-def check_manual_triggers(req: ReviewRequest, profile: Optional[dict]) -> list[str]:
-    reasons = []
+def _parse_floor_level(floor: str) -> Optional[int]:
+    """楼层解析：B2=-2, B1=-1, 1F=1, 2F=2。"""
+    if not floor:
+        return None
+    token = floor.strip().upper()
+    try:
+        if token.startswith("B"):
+            return -int(token[1:])
+        if token.endswith("F"):
+            return int(token[:-1])
+        return int(token)
+    except ValueError:
+        return None
 
-    # 业态本身是高风险
-    if profile and not profile.get("auto_review", False):
-        reasons.append(profile.get("manual_reason", "业态属高风险，须人工复核"))
 
-    # 防火分区/防烟分区被改变
-    if req.change_fire_zone:
-        reasons.append("改变了原防火分区主边界，超出自动审查范围，须转人工复核")
-    if req.change_smoke_zone:
-        reasons.append("改变了原防烟分区主边界，须转人工复核")
-    if req.complex_space:
-        reasons.append("涉及中庭/步行街/异形大空间等复杂场景，须转人工复核")
+def check_occupancy_floor(req: ReviewRequest) -> ModuleResult:
+    """业态与楼层符合性：仅对明显违规直接判定违规，其余给出复核提示。"""
+    details: list[str] = []
+    impacts: list[str] = []
+    suggestions: list[str] = []
+    status = "pass"
 
-    return reasons
+    floor_level = _parse_floor_level(req.floor)
+    is_children = req.tenant_type_1 == "儿童及教培类" or "儿童" in req.tenant_type_2
+    is_cinema = "电影" in req.tenant_type_2 or "剧场" in req.tenant_type_2 or "礼堂" in req.tenant_type_2
+
+    details.append(f"✦ 当前业态：{req.tenant_type_1} > {req.tenant_type_2}，楼层：{req.floor}")
+    details.append("✦ 本模块依据 GB50016 相关条款进行业态与楼层布置符合性快速核查")
+
+    if is_children:
+        details.append("✦ 儿童活动场所核查：不应设置在地下或半地下，宜布置在首层至三层")
+        if floor_level is not None and floor_level <= 0:
+            impacts.append("🚨 儿童活动场所设置在地下或半地下，不符合 GB50016 对儿童活动场所布置要求")
+            suggestions.append("建议调整至首层、二层或三层，并校核独立安全出口与疏散楼梯")
+            status = "violation"
+        elif floor_level is not None and floor_level > 3:
+            impacts.append("🚨 儿童活动场所设置在四层及以上，不符合 GB50016 对儿童活动场所布置要求")
+            suggestions.append("建议调整至首层、二层或三层；确需设置时须专项论证并经消防专业工程师复核")
+            status = "violation"
+        else:
+            impacts.append("⚠ 儿童活动场所须重点复核独立安全出口、疏散楼梯及最大疏散距离")
+            status = "warning"
+
+    if is_cinema:
+        details.append("✦ 剧场/电影院核查：宜设独立安全出口和疏散楼梯，并与其他区域防火分隔")
+        if floor_level is not None and floor_level <= -3:
+            impacts.append("🚨 剧场/电影院不应设置在地下三层及以下，当前楼层不符合规范要求")
+            suggestions.append("建议调整至地上一至三层或地下一层，并按规范重新组织疏散")
+            status = "violation"
+        if floor_level is not None and floor_level >= 4:
+            impacts.append("⚠ 剧场/电影院位于四层及以上时，须核查每厅疏散门不少于2个")
+            impacts.append("⚠ 剧场/电影院位于四层及以上时，每个观众厅建筑面积不宜大于400㎡")
+            suggestions.append("请在 CAD 审图阶段逐厅复核疏散门数量、防火分隔及观众厅面积")
+            if status != "violation":
+                status = "warning"
+
+    if not is_children and not is_cinema:
+        details.append("✦ 当前业态未触发楼层布置显性禁限条款")
+        impacts.append("⚠ 请专业工程师结合平面图复核安全出口数量、疏散距离及防火分隔")
+        status = "warning"
+
+    return ModuleResult(
+        module_name="业态与楼层符合性",
+        status=status,
+        summary="已完成业态与楼层布置快速核查；显性违规已提示，其余项需结合 CAD 图复核",
+        details=details,
+        impacts=impacts,
+        references=_refs("GB50016-2014_5.5.15"),
+        suggestions=suggestions,
+    )
 
 
 # ═══════════════════════════════════════════════════════════
@@ -110,6 +161,9 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     status = "pass"
 
     hazard = profile.get("sprinkler_hazard", "中危险级I")
+    sprinkler_head_type = profile.get("sprinkler_head_type", "标准响应下垂型喷头")
+    sprinkler_temp_c = profile.get("sprinkler_temp_c", 68)
+    sprinkler_k_factor = profile.get("sprinkler_k_factor", "K=80")
     if hazard == "中危险级I":
         max_area = 12.5
         max_spacing = 3.6
@@ -134,6 +188,8 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
         status = "warning"
 
     details.append(f"✦ 业态危险等级：{hazard}（依 GB50084-2017 第6.1.1条）")
+    details.append(f"✦ 建议喷头类型：{sprinkler_head_type}")
+    details.append(f"✦ 建议喷头公称动作温度：{sprinkler_temp_c}℃，流量系数：{sprinkler_k_factor}")
     details.append(f"✦ 每只喷头最大保护面积：{max_area} ㎡")
     details.append(f"✦ 喷头最大水平间距：{max_spacing} m，最小间距：{min_spacing} m")
     details.append(f"✦ 本租户面积 {req.area} ㎡，理论最少喷头数量：≥ {min_heads} 只")
@@ -160,10 +216,16 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     return ModuleResult(
         module_name="自动喷水灭火系统",
         status=status,
-        summary=f"危险等级 {hazard}，喷头间距≤{max_spacing}m，保护面积≤{max_area}㎡/只，估算≥{min_heads}只",
+        summary=(
+            f"危险等级 {hazard}，喷头{sprinkler_temp_c}℃/{sprinkler_head_type}，"
+            f"喷头间距≤{max_spacing}m，保护面积≤{max_area}㎡/只，估算≥{min_heads}只"
+        ),
         details=details,
         calculations={"hazard_level": hazard, "max_area_per_head": max_area,
-                      "max_spacing": max_spacing, "min_heads": min_heads},
+                      "max_spacing": max_spacing, "min_heads": min_heads,
+                      "sprinkler_temp_c": sprinkler_temp_c,
+                      "sprinkler_head_type": sprinkler_head_type,
+                      "sprinkler_k_factor": sprinkler_k_factor},
         impacts=impacts,
         references=refs,
         suggestions=suggestions,
@@ -220,7 +282,7 @@ def check_smoke_exhaust(req: ReviewRequest, profile: dict) -> ModuleResult:
         status = "violation"
     if req.new_wall and req.wall_to_ceiling:
         impacts.append("⚠ 到顶隔墙可能分割防烟分区：新隔墙不得破坏原防烟分区主边界")
-        suggestions.append("确认新隔墙未超越原挡烟垂壁边界；如有疑问转人工复核")
+        suggestions.append("确认新隔墙未超越原挡烟垂壁边界；如有疑问请在 CAD 审图中专项复核")
         status = "warning" if status != "violation" else status
 
     # 排烟口至最远点距离提醒
@@ -445,34 +507,21 @@ def check_hydrant_extinguisher(req: ReviewRequest, profile: dict) -> ModuleResul
 def run_review(req: ReviewRequest) -> ReviewResult:
     profile = get_profile(req.tenant_type_2)
 
-    # 安全边界检查：强制触发人工复核
-    manual_reasons = check_manual_triggers(req, profile)
-
-    if manual_reasons:
-        # 直接输出人工复核结论，不再做各专业计算
-        return ReviewResult(
-            requires_manual=True,
-            manual_reasons=manual_reasons,
-            overall_status="manual_required",
-            overall_summary=(
-                "【须转人工复核】本次审查触发了人工复核条件，"
-                "系统不输出自动审查结论。请联系消防专业工程师进行完整审图。"
-            ),
-            modules={},
-            highlights=[f"🔴 {r}" for r in manual_reasons],
-        )
-
     if profile is None:
         profile = {
             "sprinkler_hazard": "中危险级I",
+            "sprinkler_head_type": "标准响应下垂型喷头",
+            "sprinkler_temp_c": 68,
+            "sprinkler_k_factor": "K=80",
             "detector_type": "感烟探测器",
             "fire_class": "A",
             "decoration_space": "营业厅",
             "notes": [],
         }
 
-    # 六大专业模块并行计算
+    # 七个模块计算（含业态与楼层符合性）
     modules_result: dict[str, ModuleResult] = {
+        "occupancy_floor": check_occupancy_floor(req),
         "decoration": check_decoration(req, profile),
         "sprinkler": check_sprinkler(req, profile),
         "smoke_exhaust": check_smoke_exhaust(req, profile),
@@ -493,10 +542,12 @@ def run_review(req: ReviewRequest) -> ReviewResult:
     overall_status = "violation" if has_violation else "review_complete"
     overall_summary = (
         "【注意：存在违规项，须立即整改后方可施工】审查已完成，各专业结论见下方各模块。"
-        "本工具结论仅供参考，任何情况下均须经消防专业工程师复核确认。"
+        "本工具基于租户入驻不改变原有防火分区、防烟分区主边界，且不涉及中庭/步行街/异形大空间的租户二次消防图纸审核。"
+        "生成结论仅供参考，不代替人工审核，所有审核结果须经消防专业工程师复核确认，并应遵循规范条文及企业要求。"
         if has_violation else
         "【审查完成】各专业初步审查结论见下方各模块。"
-        "本工具覆盖约80%常规租户场景，结论仅供参考，须经消防专业工程师复核确认，"
+        "本工具基于租户入驻不改变原有防火分区、防烟分区主边界，且不涉及中庭/步行街/异形大空间的租户二次消防图纸审核。"
+        "生成结论仅供参考，不代替人工审核，所有审核结果须经消防专业工程师复核确认，"
         "并应遵循规范条文及企业要求。"
     )
 
