@@ -206,6 +206,24 @@ python run.py
 .\push_to_roy_pr.ps1 -SkipPR
 ```
 
+如果你要把 Roy 仓库最新 `main` 拉回本地当前仓库，请运行：
+
+```powershell
+.\pull_from_roy.ps1
+```
+
+如果你想先只抓取、不合并：
+
+```powershell
+.\pull_from_roy.ps1 -FetchOnly
+```
+
+如果你当前不在 `main`，但想强制把 `upstream/main` 合并进当前分支：
+
+```powershell
+.\pull_from_roy.ps1 -MergeToCurrentBranch
+```
+
 ---
 
 ## 项目结构
