@@ -169,6 +169,45 @@ python run.py
 
 ---
 
+## 与 Roy 协同开发
+
+当前本地唯一维护目录：
+
+`My tasks/07-租户二消审图（协同版本）/archi_rule-main`
+
+当前 Git 远端约定：
+
+- `origin`：你的私有备份仓库 `Tingtinggogogo/firecheck-pro-archi-rule`
+- `upstream`：Roy 的协同仓库 `royzhu121/archi_rule`
+
+如果你要把当前修改同步给 Roy，请在本目录运行：
+
+```powershell
+.\push_to_roy_pr.ps1
+```
+
+脚本会自动：
+
+1. 检查 `upstream` 是否存在
+2. 新建协同分支
+3. 提交当前修改
+4. 推送到 Roy 仓库
+5. 自动创建 Pull Request
+
+如果你想自定义提交信息：
+
+```powershell
+.\push_to_roy_pr.ps1 -CommitMessage "feat: update firecheck rules"
+```
+
+如果你只想推分支、暂时不创建 PR：
+
+```powershell
+.\push_to_roy_pr.ps1 -SkipPR
+```
+
+---
+
 ## 项目结构
 
 ```
