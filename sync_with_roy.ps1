@@ -37,6 +37,11 @@ try {
 
     & "$repoRoot\pull_from_roy.ps1" -BaseBranch $BaseBranch
 
+    if (-not $hasLocalChanges) {
+        Write-Host "已完成与 Roy 主线同步，当前没有需要提交的本地修改。" -ForegroundColor Green
+        exit 0
+    }
+
     if (-not $BranchName) {
         $timestamp = Get-Date -Format "yyyyMMdd-HHmm"
         $BranchName = "tingting/$timestamp-firecheck-sync"
