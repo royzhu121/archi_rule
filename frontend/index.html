@@ -11,19 +11,19 @@
    CSS 变量 & 重置
 ══════════════════════════════════════════════ */
 :root {
-  --bg-primary:    #070C18;
-  --bg-secondary:  #0D1526;
-  --bg-card:       rgba(15, 24, 45, 0.8);
-  --bg-input:      rgba(255,255,255,0.04);
-  --bg-input-hover:rgba(255,255,255,0.07);
+  --bg-primary:    #DCE6EC;
+  --bg-secondary:  #C9D6DF;
+  --bg-card:       rgba(246, 250, 253, 0.78);
+  --bg-input:      rgba(122,147,169,0.12);
+  --bg-input-hover:rgba(122,147,169,0.2);
 
-  --border:        rgba(255,255,255,0.07);
-  --border-active: rgba(0,212,255,0.4);
+  --border:        rgba(95,116,137,0.24);
+  --border-active: rgba(122,147,169,0.55);
 
-  --cyan:    #00D4FF;
-  --cyan-dim: rgba(0,212,255,0.12);
-  --purple:  #A855F7;
-  --purple-dim: rgba(168,85,247,0.12);
+  --cyan:    #7A93A9;
+  --cyan-dim: rgba(122,147,169,0.16);
+  --purple:  #92A7B8;
+  --purple-dim: rgba(146,167,184,0.16);
 
   --green:   #10B981;
   --green-dim: rgba(16,185,129,0.12);
@@ -32,16 +32,16 @@
   --red:     #EF4444;
   --red-dim: rgba(239,68,68,0.12);
 
-  --text-primary:   #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted:     #475569;
+  --text-primary:   #2E4256;
+  --text-secondary: #5F7489;
+  --text-muted:     #8A9CAD;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  --shadow-glow-cyan: 0 0 20px rgba(0,212,255,0.15);
-  --shadow-glow-purple: 0 0 20px rgba(168,85,247,0.15);
+  --shadow-glow-cyan: 0 0 20px rgba(122,147,169,0.2);
+  --shadow-glow-purple: 0 0 20px rgba(146,167,184,0.18);
   --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 
@@ -49,7 +49,7 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--bg-primary);
+  background: radial-gradient(circle at top right, #EAF0F4 0%, var(--bg-primary) 45%, #D2DEE6 100%);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -60,8 +60,8 @@ body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0;
   background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(122,147,169,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,147,169,0.08) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
 }
@@ -71,7 +71,7 @@ body::before {
 ══════════════════════════════════════════════ */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(7,12,24,0.9);
+  background: rgba(220,230,236,0.88);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
@@ -104,9 +104,9 @@ body::before {
   display: flex; align-items: center; gap: 16px;
 }
 .badge-building {
-  font-size: 11px; color: var(--cyan);
+  font-size: 11px; color: var(--text-primary);
   background: var(--cyan-dim);
-  border: 1px solid rgba(0,212,255,0.2);
+  border: 1px solid rgba(122,147,169,0.3);
   border-radius: 20px;
   padding: 4px 12px;
   font-family: 'JetBrains Mono', monospace;
@@ -114,12 +114,14 @@ body::before {
 .status-dot {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; color: var(--text-secondary);
+  --dot-color: var(--text-secondary);
 }
 .status-dot::before {
   content: '';
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--dot-color);
+  box-shadow: 0 0 8px var(--dot-color);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -231,7 +233,7 @@ input:focus, select:focus {
 input:hover, select:hover {
   background: var(--bg-input-hover);
 }
-select option { background: #1a2540; color: var(--text-primary); }
+select option { background: #E4EDF3; color: var(--text-primary); }
 
 /* 自定义 select 箭头 */
 .select-wrapper {
@@ -267,8 +269,8 @@ select option { background: #1a2540; color: var(--text-primary); }
   border-color: rgba(255,255,255,0.12);
 }
 .check-item.active {
-  background: rgba(0,212,255,0.06);
-  border-color: rgba(0,212,255,0.3);
+  background: rgba(122,147,169,0.16);
+  border-color: rgba(122,147,169,0.42);
 }
 .check-item.danger.active {
   background: rgba(239,68,68,0.06);
@@ -338,7 +340,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   width: 100%; padding: 13px;
   background: linear-gradient(135deg, var(--cyan), var(--purple));
   border: none; border-radius: var(--radius-md);
-  color: #000; font-family: 'Space Grotesk', sans-serif;
+  color: #F6FAFD; font-family: 'Space Grotesk', sans-serif;
   font-size: 14px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.05em;
   transition: all var(--transition);
@@ -351,7 +353,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   opacity: 0; transition: opacity var(--transition);
 }
 .submit-btn:hover::before { opacity: 1; }
-.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,255,0.3); }
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(122,147,169,0.35); }
 .submit-btn:active { transform: translateY(0); }
 .submit-btn:disabled {
   opacity: 0.5; cursor: not-allowed;
@@ -363,8 +365,8 @@ select option { background: #1a2540; color: var(--text-primary); }
   position: absolute; top: 50%; left: 50%;
   width: 18px; height: 18px;
   margin: -9px 0 0 -9px;
-  border: 2px solid rgba(0,0,0,0.3);
-  border-top-color: #000;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #F6FAFD;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -578,7 +580,7 @@ select option { background: #1a2540; color: var(--text-primary); }
 }
 .impact-item.critical { background: rgba(239,68,68,0.08); color: #FCA5A5; border-left: 2px solid var(--red); }
 .impact-item.warning { background: rgba(245,158,11,0.08); color: #FCD34D; border-left: 2px solid var(--amber); }
-.impact-item.info { background: rgba(0,212,255,0.05); color: var(--text-secondary); border-left: 2px solid rgba(0,212,255,0.3); }
+.impact-item.info { background: rgba(122,147,169,0.16); color: var(--text-secondary); border-left: 2px solid rgba(122,147,169,0.4); }
 
 .suggestion-section { margin-top: 4px; }
 .suggestion-title {
@@ -698,7 +700,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   </div>
   <div class="header-right">
     <div class="badge-building">耐火等级一级 · 多层商业综合体</div>
-    <div class="status-dot" id="statusDot">系统就绪</div>
+    <div class="status-dot" id="statusDot">连接后端中…</div>
   </div>
 </header>
 
@@ -904,9 +906,15 @@ select option { background: #1a2540; color: var(--text-primary); }
    全局状态
 ══════════════════════════════════════════════ */
 let profilesData = null;
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://127.0.0.1:8001'
-  : '';
+const API = (() => {
+  const isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+  if (isHttp) {
+    // Prefer same-origin API when frontend is served by FastAPI.
+    return window.location.origin;
+  }
+  // Fallback for local file preview.
+  return 'http://127.0.0.1:8000';
+})();
 
 const MODULE_CONFIG = {
   decoration:    { icon: '🎨', label: '内装修防火' },
@@ -928,11 +936,15 @@ const STATUS_LABELS = {
    初始化
 ══════════════════════════════════════════════ */
 async function init() {
+  setStatus('连接后端中…', 'amber');
   try {
-    const res = await fetch(`${API}/api/tenant-profiles`);
-    profilesData = await res.json();
+    profilesData = await fetchJSONWithRetry(`${API}/api/tenant-profiles`, {
+      retries: 5,
+      retryDelay: 800,
+      timeout: 4000,
+    });
     populateTenant1();
-    setStatus('系统就绪', 'green');
+    setStatus('后端在线', 'green');
   } catch(e) {
     setStatus('后端离线', 'red');
     console.warn('无法连接后端，请先运行 run.py', e);
@@ -940,6 +952,29 @@ async function init() {
     profilesData = getLocalProfiles();
     populateTenant1();
   }
+}
+
+async function fetchJSONWithRetry(url, { retries = 3, retryDelay = 600, timeout = 3000 } = {}) {
+  let lastError = null;
+  for (let i = 0; i < retries; i++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timer);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (err) {
+      clearTimeout(timer);
+      lastError = err;
+      if (i < retries - 1) {
+        await new Promise(r => setTimeout(r, retryDelay));
+      }
+    }
+  }
+  throw lastError || new Error('backend_unreachable');
 }
 
 function getLocalProfiles() {
@@ -961,7 +996,15 @@ function getLocalProfiles() {
 function setStatus(text, color) {
   const dot = document.getElementById('statusDot');
   dot.textContent = text;
-  dot.style.color = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : 'var(--text-secondary)';
+  const colorMap = {
+    green: 'var(--green)',
+    red: 'var(--red)',
+    amber: 'var(--amber)',
+    default: 'var(--text-secondary)',
+  };
+  const resolved = colorMap[color] || colorMap.default;
+  dot.style.color = resolved;
+  dot.style.setProperty('--dot-color', resolved);
 }
 
 /* ══════════════════════════════════════════════
