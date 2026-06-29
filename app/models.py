@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 class ReviewRequest(BaseModel):
     # 项目基本信息
     site: str = Field(default="南宁宜家", description="站点名称")
+    tenant_name: str = Field(default="", description="租户名称")
     floor: str = Field(..., description="楼层: B2/B1/1F/2F/3F")
 
     # 业态属性
@@ -67,3 +68,8 @@ class ReviewResult(BaseModel):
 
     # GLM生成的最终综合意见
     llm_opinion: Optional[str] = None
+
+
+class ReportExportRequest(BaseModel):
+    request: ReviewRequest
+    result: ReviewResult

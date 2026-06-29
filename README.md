@@ -1,5 +1,13 @@
 # 🔥 FireCheck Pro
 
+## 当前唯一维护目录
+
+自 2026-06-29 起，本项目后续调试、修改、提交统一仅在以下目录进行：
+
+`My tasks/07-租户二消审图（协同版本）/archi_rule-main`
+
+工作区内其他 `archi_rule` / `archi_rule-main` 副本均视为历史归档，不再继续维护。
+
 **租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 智谱 GLM
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
@@ -12,7 +20,7 @@
 
 FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户二次装修**消防快速审查场景而设计。输入租户业态与改造信息，系统自动输出六大消防专业的审查结论、整改建议与规范依据，并由智谱 GLM 生成综合审查意见。
 
-> **目标覆盖约 80% 的常规租户场景，不替代完整人工审图。**
+> 本工具用于辅助快速审查，不代替完整人工审图。
 
 ---
 
@@ -119,8 +127,8 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/royzhu121/archi_rule.git
-cd archi_rule
+git clone https://github.com/Tingtinggogogo/firecheck-pro-archi-rule.git
+cd firecheck-pro-archi-rule
 ```
 
 ### 2. 安装依赖
@@ -152,14 +160,82 @@ ZHIPU_MODEL=glm-4-plus
 python run.py
 ```
 
-访问 `http://localhost:8000` 即可使用。
+启动后优先访问：
+
+- `http://localhost:8000`
+- `http://127.0.0.1:8000`
+
+若某些环境中 `localhost` 被代理或解析异常，请使用 `127.0.0.1`。
+
+---
+
+## 与 Roy 协同开发
+
+当前本地唯一维护目录：
+
+`My tasks/07-租户二消审图（协同版本）/archi_rule-main`
+
+当前 Git 远端约定：
+
+- `origin`：你的私有备份仓库 `Tingtinggogogo/firecheck-pro-archi-rule`
+- `upstream`：Roy 的协同仓库 `royzhu121/archi_rule`
+
+如果你要把当前修改同步给 Roy，请在本目录运行：
+
+```powershell
+.\push_to_roy_pr.ps1
+```
+
+脚本会自动：
+
+1. 检查 `upstream` 是否存在
+2. 新建协同分支
+3. 提交当前修改
+4. 推送到 Roy 仓库
+5. 自动创建 Pull Request
+
+如果你想自定义提交信息：
+
+```powershell
+.\push_to_roy_pr.ps1 -CommitMessage "feat: update firecheck rules"
+```
+
+如果你只想推分支、暂时不创建 PR：
+
+```powershell
+.\push_to_roy_pr.ps1 -SkipPR
+```
+
+如果你要把 Roy 仓库最新 `main` 拉回本地当前仓库，请运行：
+
+```powershell
+.\pull_from_roy.ps1
+```
+
+如果你想一条命令完成“先同步 Roy 最新主线，再把当前修改推成新分支并创建 PR”：
+
+```powershell
+.\sync_with_roy.ps1
+```
+
+如果你想先只抓取、不合并：
+
+```powershell
+.\pull_from_roy.ps1 -FetchOnly
+```
+
+如果你当前不在 `main`，但想强制把 `upstream/main` 合并进当前分支：
+
+```powershell
+.\pull_from_roy.ps1 -MergeToCurrentBranch
+```
 
 ---
 
 ## 项目结构
 
 ```
-archi_rule/
+archi_rule-main/
 ├── app/
 │   ├── llm/
 │   │   └── zhipu_client.py       # 智谱 GLM 调用

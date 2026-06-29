@@ -3,14 +3,16 @@ FastAPI 主程序
 """
 
 import os
+from urllib.parse import quote
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import ReviewRequest, ReviewResult
+from app.models import ReviewRequest, ReviewResult, ReportExportRequest
 from app.rules.engine import run_review
 from app.llm.zhipu_client import generate_llm_opinion
+from app.report_docx import build_review_report_docx
 from app.rules.tenant_profiles import LEVEL1_TO_LEVEL2, TENANT_PROFILES
 import config as cfg
 
@@ -40,7 +42,14 @@ async def serve_frontend():
     index_path = os.path.join(_FRONTEND_DIR, "index.html")
     if not os.path.exists(index_path):
         raise HTTPException(status_code=404, detail="前端文件未找到")
-    return FileResponse(index_path)
+    return FileResponse(
+        index_path,
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.get("/api/tenant-profiles")
@@ -83,3 +92,20 @@ async def health():
         "model": cfg.ZHIPU_MODEL,
         "building_context": cfg.BUILDING_CONTEXT["description"],
     }
+
+
+@app.post("/api/report-docx")
+async def export_report_docx(payload: ReportExportRequest):
+    """下载 Word 版本审图报告。"""
+    tenant_name = payload.request.tenant_name.strip() if payload.request.tenant_name else "未命名租户"
+    filename = f"消防审图报告_{tenant_name}_{payload.request.floor}.docx"
+    encoded_filename = quote(filename)
+    content = build_review_report_docx(payload.request, payload.result)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "Cache-Control": "no-store",
+        },
+    )

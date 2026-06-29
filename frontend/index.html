@@ -11,19 +11,19 @@
    CSS 变量 & 重置
 ══════════════════════════════════════════════ */
 :root {
-  --bg-primary:    #070C18;
-  --bg-secondary:  #0D1526;
-  --bg-card:       rgba(15, 24, 45, 0.8);
-  --bg-input:      rgba(255,255,255,0.04);
-  --bg-input-hover:rgba(255,255,255,0.07);
+  --bg-primary:    #EAF2FB;
+  --bg-secondary:  #DCEAFF;
+  --bg-card:       rgba(255, 255, 255, 0.9);
+  --bg-input:      rgba(0, 88, 163, 0.08);
+  --bg-input-hover:rgba(0, 88, 163, 0.14);
 
-  --border:        rgba(255,255,255,0.07);
-  --border-active: rgba(0,212,255,0.4);
+  --border:        rgba(0, 88, 163, 0.2);
+  --border-active: rgba(0, 88, 163, 0.55);
 
-  --cyan:    #00D4FF;
-  --cyan-dim: rgba(0,212,255,0.12);
-  --purple:  #A855F7;
-  --purple-dim: rgba(168,85,247,0.12);
+  --cyan:    #0058A3;
+  --cyan-dim: rgba(0, 88, 163, 0.12);
+  --purple:  #0A6ECF;
+  --purple-dim: rgba(10, 110, 207, 0.12);
 
   --green:   #10B981;
   --green-dim: rgba(16,185,129,0.12);
@@ -32,16 +32,16 @@
   --red:     #EF4444;
   --red-dim: rgba(239,68,68,0.12);
 
-  --text-primary:   #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted:     #475569;
+  --text-primary:   #0D2C4F;
+  --text-secondary: #214E7A;
+  --text-muted:     #4D6D8E;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  --shadow-glow-cyan: 0 0 20px rgba(0,212,255,0.15);
-  --shadow-glow-purple: 0 0 20px rgba(168,85,247,0.15);
+  --shadow-glow-cyan: 0 0 20px rgba(0, 88, 163, 0.22);
+  --shadow-glow-purple: 0 0 20px rgba(10, 110, 207, 0.2);
   --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 
@@ -49,7 +49,7 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--bg-primary);
+  background: radial-gradient(circle at top right, #F2F7FF 0%, var(--bg-primary) 48%, #D7E8FA 100%);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -60,8 +60,8 @@ body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0;
   background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(122,147,169,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,147,169,0.08) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
 }
@@ -71,7 +71,7 @@ body::before {
 ══════════════════════════════════════════════ */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(7,12,24,0.9);
+  background: rgba(234,242,251,0.92);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
@@ -104,9 +104,9 @@ body::before {
   display: flex; align-items: center; gap: 16px;
 }
 .badge-building {
-  font-size: 11px; color: var(--cyan);
+  font-size: 11px; color: var(--text-primary);
   background: var(--cyan-dim);
-  border: 1px solid rgba(0,212,255,0.2);
+  border: 1px solid rgba(122,147,169,0.3);
   border-radius: 20px;
   padding: 4px 12px;
   font-family: 'JetBrains Mono', monospace;
@@ -114,12 +114,14 @@ body::before {
 .status-dot {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; color: var(--text-secondary);
+  --dot-color: var(--text-secondary);
 }
 .status-dot::before {
   content: '';
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--dot-color);
+  box-shadow: 0 0 8px var(--dot-color);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -145,7 +147,7 @@ body::before {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   overflow-y: auto;
-  padding: 24px;
+  padding: 24px 24px 16px;
   display: flex; flex-direction: column; gap: 16px;
   position: sticky; top: 64px; height: calc(100vh - 64px);
 }
@@ -231,7 +233,7 @@ input:focus, select:focus {
 input:hover, select:hover {
   background: var(--bg-input-hover);
 }
-select option { background: #1a2540; color: var(--text-primary); }
+select option { background: #F1F7FF; color: var(--text-primary); }
 
 /* 自定义 select 箭头 */
 .select-wrapper {
@@ -267,8 +269,8 @@ select option { background: #1a2540; color: var(--text-primary); }
   border-color: rgba(255,255,255,0.12);
 }
 .check-item.active {
-  background: rgba(0,212,255,0.06);
-  border-color: rgba(0,212,255,0.3);
+  background: rgba(122,147,169,0.16);
+  border-color: rgba(122,147,169,0.42);
 }
 .check-item.danger.active {
   background: rgba(239,68,68,0.06);
@@ -338,11 +340,15 @@ select option { background: #1a2540; color: var(--text-primary); }
   width: 100%; padding: 13px;
   background: linear-gradient(135deg, var(--cyan), var(--purple));
   border: none; border-radius: var(--radius-md);
-  color: #000; font-family: 'Space Grotesk', sans-serif;
+  color: #F6FAFD; font-family: 'Space Grotesk', sans-serif;
   font-size: 14px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.05em;
   transition: all var(--transition);
-  position: relative; overflow: hidden;
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  z-index: 3;
+  overflow: hidden;
 }
 .submit-btn::before {
   content: '';
@@ -351,7 +357,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   opacity: 0; transition: opacity var(--transition);
 }
 .submit-btn:hover::before { opacity: 1; }
-.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,255,0.3); }
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(122,147,169,0.35); }
 .submit-btn:active { transform: translateY(0); }
 .submit-btn:disabled {
   opacity: 0.5; cursor: not-allowed;
@@ -363,10 +369,28 @@ select option { background: #1a2540; color: var(--text-primary); }
   position: absolute; top: 50%; left: 50%;
   width: 18px; height: 18px;
   margin: -9px 0 0 -9px;
-  border: 2px solid rgba(0,0,0,0.3);
-  border-top-color: #000;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #F6FAFD;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-active);
+  background: rgba(0, 88, 163, 0.08);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.secondary-btn:hover {
+  background: rgba(0, 88, 163, 0.15);
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -578,7 +602,7 @@ select option { background: #1a2540; color: var(--text-primary); }
 }
 .impact-item.critical { background: rgba(239,68,68,0.08); color: #FCA5A5; border-left: 2px solid var(--red); }
 .impact-item.warning { background: rgba(245,158,11,0.08); color: #FCD34D; border-left: 2px solid var(--amber); }
-.impact-item.info { background: rgba(0,212,255,0.05); color: var(--text-secondary); border-left: 2px solid rgba(0,212,255,0.3); }
+.impact-item.info { background: rgba(122,147,169,0.16); color: var(--text-secondary); border-left: 2px solid rgba(122,147,169,0.4); }
 
 .suggestion-section { margin-top: 4px; }
 .suggestion-title {
@@ -698,7 +722,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   </div>
   <div class="header-right">
     <div class="badge-building">耐火等级一级 · 多层商业综合体</div>
-    <div class="status-dot" id="statusDot">系统就绪</div>
+    <div class="status-dot" id="statusDot">连接后端中…</div>
   </div>
 </header>
 
@@ -716,10 +740,14 @@ select option { background: #1a2540; color: var(--text-primary); }
         <div class="section-chevron">▾</div>
       </div>
       <div class="section-body">
+        <div class="form-row">
+          <label>站点</label>
+          <input type="text" id="site" value="南宁宜家" placeholder="站点名称">
+        </div>
         <div class="form-row row-2">
           <div class="form-row">
-            <label>站点</label>
-            <input type="text" id="site" value="南宁宜家" placeholder="站点名称">
+            <label>租户名称</label>
+            <input type="text" id="tenantName" value="" placeholder="请输入租户名称">
           </div>
           <div class="form-row">
             <label>楼层</label>
@@ -792,37 +820,10 @@ select option { background: #1a2540; color: var(--text-primary); }
       </div>
     </div>
 
-    <!-- § 3 安全阀 -->
-    <div class="section-card" id="sec3">
-      <div class="section-header" onclick="toggleSection('sec3')">
-        <div class="section-number">3</div>
-        <div class="section-title">报警与疏散前置条件</div>
-        <div class="section-chevron">▾</div>
-      </div>
-      <div class="section-body">
-        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">以下任一勾选将触发转人工复核</div>
-        <div class="toggle-row danger" id="tg_fireZone" onclick="toggleDanger('fireZone', this)">
-          <span class="toggle-label">改变了原防火分区主边界</span>
-          <div class="toggle-switch"></div>
-          <input type="checkbox" id="fireZone" style="display:none">
-        </div>
-        <div class="toggle-row danger" id="tg_smokeZone" onclick="toggleDanger('smokeZone', this)">
-          <span class="toggle-label">改变了原防烟分区主边界</span>
-          <div class="toggle-switch"></div>
-          <input type="checkbox" id="smokeZone" style="display:none">
-        </div>
-        <div class="toggle-row danger" id="tg_complexSpace" onclick="toggleDanger('complexSpace', this)">
-          <span class="toggle-label">涉及中庭/步行街/异形大空间</span>
-          <div class="toggle-switch"></div>
-          <input type="checkbox" id="complexSpace" style="display:none">
-        </div>
-      </div>
-    </div>
-
-    <!-- § 4 影响项/改造项 -->
+    <!-- § 3 影响项/改造项 -->
     <div class="section-card" id="sec4">
       <div class="section-header" onclick="toggleSection('sec4')">
-        <div class="section-number">4</div>
+        <div class="section-number">3</div>
         <div class="section-title">影响项 / 改造项</div>
         <div class="section-chevron">▾</div>
       </div>
@@ -847,34 +848,6 @@ select option { background: #1a2540; color: var(--text-primary); }
             <input type="checkbox" id="highShelves">
             <div class="check-box">✓</div>
             <span class="check-label">高柜/高货架</span>
-          </div>
-        </div>
-        <div style="font-size:11px; color:var(--red); margin:8px 0 4px; letter-spacing:0.05em;">遮挡类（严重违规）</div>
-        <div class="impact-grid">
-          <div class="check-item danger" onclick="toggleCheck(this, 'blockSprinkler')">
-            <input type="checkbox" id="blockSprinkler">
-            <div class="check-box">✓</div>
-            <span class="check-label">遮挡喷头</span>
-          </div>
-          <div class="check-item danger" onclick="toggleCheck(this, 'blockDetector')">
-            <input type="checkbox" id="blockDetector">
-            <div class="check-box">✓</div>
-            <span class="check-label">遮挡探测器</span>
-          </div>
-          <div class="check-item danger" onclick="toggleCheck(this, 'blockSmokeVent')">
-            <input type="checkbox" id="blockSmokeVent">
-            <div class="check-box">✓</div>
-            <span class="check-label">遮挡排烟口</span>
-          </div>
-          <div class="check-item danger" onclick="toggleCheck(this, 'blockHydrant')">
-            <input type="checkbox" id="blockHydrant">
-            <div class="check-box">✓</div>
-            <span class="check-label">遮挡消火栓</span>
-          </div>
-          <div class="check-item danger" onclick="toggleCheck(this, 'blockEvacSign')">
-            <input type="checkbox" id="blockEvacSign">
-            <div class="check-box">✓</div>
-            <span class="check-label">遮挡疏散标志</span>
           </div>
         </div>
       </div>
@@ -904,11 +877,22 @@ select option { background: #1a2540; color: var(--text-primary); }
    全局状态
 ══════════════════════════════════════════════ */
 let profilesData = null;
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://127.0.0.1:8001'
-  : '';
+let lastReviewRequest = null;
+let lastReviewResult = null;
+let backendOnline = false;
+let healthTimer = null;
+const API = (() => {
+  const isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+  if (isHttp) {
+    // Prefer same-origin API when frontend is served by FastAPI.
+    return window.location.origin;
+  }
+  // Fallback for local file preview.
+  return 'http://127.0.0.1:8000';
+})();
 
 const MODULE_CONFIG = {
+  occupancy_floor: { icon: '🏢', label: '业态与楼层符合性' },
   decoration:    { icon: '🎨', label: '内装修防火' },
   sprinkler:     { icon: '💧', label: '自动喷水灭火' },
   smoke_exhaust: { icon: '💨', label: '防烟排烟' },
@@ -921,25 +905,54 @@ const STATUS_LABELS = {
   pass: '合规',
   warning: '注意',
   violation: '违规',
-  manual: '转人工',
 };
 
 /* ══════════════════════════════════════════════
    初始化
 ══════════════════════════════════════════════ */
 async function init() {
+  setStatus('连接后端中…', 'amber');
   try {
-    const res = await fetch(`${API}/api/tenant-profiles`);
-    profilesData = await res.json();
+    profilesData = await fetchJSONWithRetry(`${API}/api/tenant-profiles`, {
+      retries: 5,
+      retryDelay: 800,
+      timeout: 4000,
+    });
     populateTenant1();
-    setStatus('系统就绪', 'green');
+    setBackendConnectivity(true);
   } catch(e) {
-    setStatus('后端离线', 'red');
+    setBackendConnectivity(false);
     console.warn('无法连接后端，请先运行 run.py', e);
     // 使用本地数据兜底
     profilesData = getLocalProfiles();
     populateTenant1();
   }
+
+  // 每 10 秒自动健康检查，支持离线后自动恢复在线。
+  startHealthMonitor();
+}
+
+async function fetchJSONWithRetry(url, { retries = 3, retryDelay = 600, timeout = 3000 } = {}) {
+  let lastError = null;
+  for (let i = 0; i < retries; i++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timer);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (err) {
+      clearTimeout(timer);
+      lastError = err;
+      if (i < retries - 1) {
+        await new Promise(r => setTimeout(r, retryDelay));
+      }
+    }
+  }
+  throw lastError || new Error('backend_unreachable');
 }
 
 function getLocalProfiles() {
@@ -961,7 +974,52 @@ function getLocalProfiles() {
 function setStatus(text, color) {
   const dot = document.getElementById('statusDot');
   dot.textContent = text;
-  dot.style.color = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : 'var(--text-secondary)';
+  const colorMap = {
+    green: 'var(--green)',
+    red: 'var(--red)',
+    amber: 'var(--amber)',
+    default: 'var(--text-secondary)',
+  };
+  const resolved = colorMap[color] || colorMap.default;
+  dot.style.color = resolved;
+  dot.style.setProperty('--dot-color', resolved);
+}
+
+function setBackendConnectivity(isOnline) {
+  backendOnline = isOnline;
+  const dot = document.getElementById('statusDot');
+  const currentText = dot ? (dot.textContent || '') : '';
+  const isBackendText = currentText.startsWith('后端') || currentText.startsWith('连接后端');
+
+  if (!isOnline) {
+    setStatus('后端离线', 'red');
+    return;
+  }
+
+  // 只在状态栏当前用于表示后端连接时更新为在线，避免覆盖“审查中”等业务状态提示。
+  if (isBackendText) {
+    setStatus('后端在线', 'green');
+  }
+}
+
+async function checkBackendHealth() {
+  try {
+    await fetchJSONWithRetry(`${API}/api/health`, {
+      retries: 2,
+      retryDelay: 500,
+      timeout: 2500,
+    });
+    setBackendConnectivity(true);
+  } catch (_) {
+    setBackendConnectivity(false);
+  }
+}
+
+function startHealthMonitor() {
+  if (healthTimer) {
+    clearInterval(healthTimer);
+  }
+  healthTimer = setInterval(checkBackendHealth, 10000);
 }
 
 /* ══════════════════════════════════════════════
@@ -1001,12 +1059,11 @@ function onTenant2Change() {
   const isAuto = p.auto_review;
   badge.style.display = 'block';
   if (!isAuto) {
-    badge.style.background = 'rgba(239,68,68,0.08)';
-    badge.style.border = '1px solid rgba(239,68,68,0.3)';
-    badge.style.color = '#FCA5A5';
-    badge.textContent = '⚠ 该业态将触发转人工复核';
+    badge.style.background = 'rgba(245,158,11,0.08)';
+    badge.style.border = '1px solid rgba(245,158,11,0.3)';
+    badge.style.color = 'var(--amber)';
+    badge.textContent = '⚠ 高风险业态：系统会出具报告，并提示工程师重点复核';
   } else {
-    const riskColors = { low: 'var(--green)', medium_low: 'var(--amber)', medium: 'var(--amber)' };
     badge.style.background = 'rgba(16,185,129,0.06)';
     badge.style.border = '1px solid rgba(16,185,129,0.2)';
     badge.style.color = 'var(--green)';
@@ -1053,6 +1110,7 @@ async function submitReview() {
 
   const payload = {
     site: document.getElementById('site').value || '南宁宜家',
+    tenant_name: document.getElementById('tenantName').value || '',
     floor: document.getElementById('floor').value,
     tenant_type_1: t1,
     tenant_type_2: t2,
@@ -1060,18 +1118,18 @@ async function submitReview() {
     ceiling_type: document.getElementById('ceilingType').value,
     ceiling_height: parseFloat(document.getElementById('ceilingHeight').value) || 3.5,
     room_max_length: parseFloat(document.getElementById('roomLength').value) || 0,
-    change_fire_zone: document.getElementById('fireZone').checked,
-    change_smoke_zone: document.getElementById('smokeZone').checked,
-    complex_space: document.getElementById('complexSpace').checked,
+    change_fire_zone: false,
+    change_smoke_zone: false,
+    complex_space: false,
     new_wall: document.getElementById('newWall').checked,
     wall_to_ceiling: document.getElementById('wallToCeiling').checked,
     new_enclosed_room: document.getElementById('newEnclosedRoom').checked,
     high_shelves: document.getElementById('highShelves').checked,
-    block_sprinkler: document.getElementById('blockSprinkler').checked,
-    block_detector: document.getElementById('blockDetector').checked,
-    block_smoke_vent: document.getElementById('blockSmokeVent').checked,
-    block_hydrant: document.getElementById('blockHydrant').checked,
-    block_evacuation_sign: document.getElementById('blockEvacSign').checked,
+    block_sprinkler: false,
+    block_detector: false,
+    block_smoke_vent: false,
+    block_hydrant: false,
+    block_evacuation_sign: false,
   };
 
   try {
@@ -1082,8 +1140,13 @@ async function submitReview() {
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    lastReviewRequest = payload;
+    lastReviewResult = data;
     renderResults(data);
     setStatus('审查完成', 'green');
+    if (backendOnline) {
+      setTimeout(() => setStatus('后端在线', 'green'), 1200);
+    }
   } catch (e) {
     setStatus('请求失败', 'red');
     renderError(e.message);
@@ -1111,8 +1174,8 @@ function renderResults(data) {
     content.appendChild(buildHighlights(data.highlights));
   }
 
-  // 3. 专业模块 (仅非人工复核时)
-  if (!data.requires_manual && data.modules) {
+  // 3. 专业模块
+  if (data.modules) {
     const grid = document.createElement('div');
     grid.className = 'modules-grid';
     Object.entries(data.modules).forEach(([key, mod]) => {
@@ -1126,6 +1189,9 @@ function renderResults(data) {
     content.appendChild(buildLLMSection(data.llm_opinion));
   }
 
+  // 5. 报告下载
+  content.appendChild(buildReportActionBar());
+
   // 滚动到顶
   document.getElementById('resultsPanel').scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1133,9 +1199,7 @@ function renderResults(data) {
 function buildVerdictBanner(data) {
   const div = document.createElement('div');
   let cls, icon, title;
-  if (data.requires_manual) {
-    cls = 'manual'; icon = '🔴'; title = '须转人工复核';
-  } else if (data.overall_status === 'violation') {
+  if (data.overall_status === 'violation') {
     cls = 'violation'; icon = '⚠️'; title = '存在违规项 — 须立即整改';
   } else {
     cls = 'pass'; icon = '✅'; title = '初步审查完成';
@@ -1153,6 +1217,41 @@ function buildVerdictBanner(data) {
       </div>` : ''}
   `;
   return div;
+}
+
+function buildReportActionBar() {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `<button class="secondary-btn" onclick="downloadDocxReport()">下载 Word 审图报告</button>`;
+  return wrapper;
+}
+
+async function downloadDocxReport() {
+  if (!lastReviewRequest || !lastReviewResult) {
+    alert('请先执行一次审图');
+    return;
+  }
+
+  const res = await fetch(`${API}/api/report-docx`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ request: lastReviewRequest, result: lastReviewResult }),
+  });
+
+  if (!res.ok) {
+    alert('报告生成失败，请稍后重试');
+    return;
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const tenant = (lastReviewRequest.tenant_name || '租户').trim() || '租户';
+  a.download = `消防审图报告_${tenant}_${lastReviewRequest.floor}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 function buildHighlights(highlights) {
