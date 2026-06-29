@@ -33,8 +33,13 @@ def main():
         print("=" * 60)
 
     import uvicorn
+    display_host = "127.0.0.1" if cfg.HOST in ("0.0.0.0", "::") else cfg.HOST
     print(f"\n🔥 消防审图系统启动中...")
-    print(f"   地址: http://{cfg.HOST}:{cfg.PORT}")
+    print(f"   本机地址: http://localhost:{cfg.PORT}")
+    print(f"   回环地址: http://127.0.0.1:{cfg.PORT}")
+    print(f"   服务监听: http://{cfg.HOST}:{cfg.PORT}")
+    if display_host not in ("localhost", "127.0.0.1"):
+        print(f"   当前推荐访问: http://{display_host}:{cfg.PORT}")
     print(f"   模型: {cfg.ZHIPU_MODEL}")
     print(f"   按 Ctrl+C 停止\n")
     uvicorn.run(

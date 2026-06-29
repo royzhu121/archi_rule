@@ -152,7 +152,12 @@ ZHIPU_MODEL=glm-4-plus
 python run.py
 ```
 
-访问 `http://localhost:8000` 即可使用。
+启动后优先访问：
+
+- `http://localhost:8000`
+- `http://127.0.0.1:8000`
+
+若某些环境中 `localhost` 被代理或解析异常，请使用 `127.0.0.1`。
 
 ---
 
