@@ -18,6 +18,12 @@
 .\pull_from_roy.ps1
 ```
 
+如果你已经完成本轮修改，想一次完成“同步 Roy 最新主线 + 推分支 + 创建 PR”，可直接运行：
+
+```powershell
+.\sync_with_roy.ps1
+```
+
 3. 本地验证完成后，在项目根目录运行：
 
 ```powershell
@@ -51,6 +57,12 @@ git remote -v
 
 ```powershell
 .\pull_from_roy.ps1 -FetchOnly
+```
+
+一条命令同步并开 PR：
+
+```powershell
+.\sync_with_roy.ps1
 ```
 
 仅推送到你的私有仓库：

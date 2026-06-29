@@ -212,6 +212,12 @@ python run.py
 .\pull_from_roy.ps1
 ```
 
+如果你想一条命令完成“先同步 Roy 最新主线，再把当前修改推成新分支并创建 PR”：
+
+```powershell
+.\sync_with_roy.ps1
+```
+
 如果你想先只抓取、不合并：
 
 ```powershell
