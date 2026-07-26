@@ -260,6 +260,73 @@ def get_profile(tenant_type_2: str) -> Optional[dict]:
     return None
 
 
+def _parse_floor_level(floor: str) -> Optional[int]:
+    """楼层解析：B2=-2, B1=-1, 1F=1, 2F=2。"""
+    if not floor:
+        return None
+    token = floor.strip().upper()
+    try:
+        if token.startswith("B"):
+            return -int(token[1:])
+        if token.endswith("F"):
+            return int(token[:-1])
+        return int(token)
+    except ValueError:
+        return None
+
+
+def _is_office_area(tenant_type_1: str, tenant_type_2: str) -> bool:
+    """办公区识别：以业态文本包含“办公”为准，避免误伤普通服务业态。"""
+    text = f"{tenant_type_1 or ''} {tenant_type_2 or ''}"
+    return "办公" in text or "办公室" in text
+
+
+def resolve_sprinkler_hazard(
+    tenant_type_1: str,
+    tenant_type_2: str,
+    floor: str,
+    base_hazard: str,
+) -> str:
+    """
+    喷淋危险等级动态修正规则（按项目设计说明）：
+    - MU 商场/餐饮在 1F、2F（除办公区）统一按中危险级II。
+    - 其他情况沿用画像库基准等级。
+    """
+    floor_level = _parse_floor_level(floor)
+    if floor_level in (1, 2) and not _is_office_area(tenant_type_1, tenant_type_2):
+        return "中危险级II"
+    return base_hazard
+
+
+def _is_garage_or_machine_room(tenant_type_1: str, tenant_type_2: str) -> bool:
+    """识别车库/机房类空间。"""
+    text = f"{tenant_type_1 or ''} {tenant_type_2 or ''}"
+    garage_keywords = ["车库", "汽车库", "停车"]
+    machine_room_keywords = ["机房", "设备机房", "配电房", "变电", "泵房", "风机房"]
+    return any(k in text for k in garage_keywords + machine_room_keywords)
+
+
+def resolve_sprinkler_head_type(tenant_type_1: str, tenant_type_2: str, base_head_type: str) -> str:
+    """
+    喷头响应速度修正规则：
+    - 除车库和机房外，统一采用快速响应喷头。
+    - 车库/机房保持原画像建议（通常为标准响应或按工艺复核）。
+    """
+    if _is_garage_or_machine_room(tenant_type_1, tenant_type_2):
+        normalized = base_head_type or "标准响应下垂型喷头"
+        normalized = normalized.replace("快速响应", "标准响应")
+        if "标准响应" not in normalized:
+            normalized = f"标准响应{normalized}"
+        return normalized
+
+    # 将原描述统一提升为快速响应，保留“下垂型”“耐高温”等后缀语义。
+    normalized = base_head_type or "标准响应下垂型喷头"
+    normalized = normalized.replace("标准响应", "快速响应")
+    if "快速响应" not in normalized:
+        normalized = f"快速响应{normalized}"
+    return normalized
+
+
 def is_auto_reviewable(tenant_type_2: str) -> tuple[bool, str]:
     """
     返回 (可否自动审查, 不可审查原因)

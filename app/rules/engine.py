@@ -11,7 +11,11 @@ import os
 from typing import Optional
 
 from app.models import ReviewRequest, ReviewResult, ModuleResult, ArticleRef
-from app.rules.tenant_profiles import get_profile
+from app.rules.tenant_profiles import (
+    get_profile,
+    resolve_sprinkler_hazard,
+    resolve_sprinkler_head_type,
+)
 
 # 加载条文库
 _ARTICLES_PATH = os.path.join(os.path.dirname(__file__), "..", "standards", "articles.json")
@@ -160,8 +164,11 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     suggestions: list[str] = []
     status = "pass"
 
-    hazard = profile.get("sprinkler_hazard", "中危险级I")
-    sprinkler_head_type = profile.get("sprinkler_head_type", "标准响应下垂型喷头")
+    base_hazard = profile.get("sprinkler_hazard", "中危险级I")
+    hazard = resolve_sprinkler_hazard(req.tenant_type_1, req.tenant_type_2, req.floor, base_hazard)
+    hazard_overridden = hazard != base_hazard
+    base_head_type = profile.get("sprinkler_head_type", "标准响应下垂型喷头")
+    sprinkler_head_type = resolve_sprinkler_head_type(req.tenant_type_1, req.tenant_type_2, base_head_type)
     sprinkler_temp_c = profile.get("sprinkler_temp_c", 68)
     sprinkler_k_factor = profile.get("sprinkler_k_factor", "K=80")
     if hazard == "中危险级I":
@@ -188,6 +195,8 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
         status = "warning"
 
     details.append(f"✦ 业态危险等级：{hazard}（依 GB50084-2017 第6.1.1条）")
+    if hazard_overridden:
+        details.append("✦ 设计说明修正规则：1F/2F 非办公区按中危险级II执行")
     details.append(f"✦ 建议喷头类型：{sprinkler_head_type}")
     details.append(f"✦ 建议喷头公称动作温度：{sprinkler_temp_c}℃，流量系数：{sprinkler_k_factor}")
     details.append(f"✦ 每只喷头最大保护面积：{max_area} ㎡")

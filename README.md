@@ -8,7 +8,7 @@
 
 工作区内其他 `archi_rule` / `archi_rule-main` 副本均视为历史归档，不再继续维护。
 
-**租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 智谱 GLM
+**租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 千问
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)
@@ -18,7 +18,7 @@
 
 ## 简介
 
-FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户二次装修**消防快速审查场景而设计。输入租户业态与改造信息，系统自动输出六大消防专业的审查结论、整改建议与规范依据，并由智谱 GLM 生成综合审查意见。
+FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户二次装修**消防快速审查场景而设计。输入租户业态与改造信息，系统自动输出六大消防专业的审查结论、整改建议与规范依据，并由千问生成综合审查意见。
 
 > 本工具用于辅助快速审查，不代替完整人工审图。
 
@@ -34,7 +34,7 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 | 4 | 🚨 **火灾自动报警** | 探测器类型 / 数量；应急广播功率；手报步行距离校核 |
 | 5 | 💡 **应急照明 & 疏散指示** | 出口标志数量 / 规格；连续性校核；补设位置提示 |
 | 6 | 🧯 **消火栓 & 灭火器** | 火灾类别确认；保护距离校核；设置条件核查 |
-| ★ | 🤖 **AI 综合意见** | 智谱 GLM-4-plus 生成完整综合审查意见 |
+| ★ | 🤖 **AI 综合意见** | 千问（Qwen）生成完整综合审查意见 |
 
 ---
 
@@ -117,7 +117,7 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 |------|------|
 | 后端 | Python 3.11+ · FastAPI · Uvicorn |
 | 前端 | 原生 HTML / CSS / JavaScript（无框架） |
-| AI   | 智谱 GLM-4-plus（[open.bigmodel.cn](https://open.bigmodel.cn/)） |
+| AI   | 千问（Qwen，DashScope 兼容接口） |
 | 规范库 | 内置 GB50016 / GB50084 / GB50116 / GB50222 / GB50974 / GB51251 / GB51309 |
 
 ---
@@ -142,14 +142,14 @@ pip install -r requirements.txt
 方式 A — 修改 `config.py`：
 
 ```python
-ZHIPU_API_KEY = "your_api_key_here"
+QWEN_API_KEY = "your_api_key_here"
 ```
 
 方式 B — 创建 `.env`（推荐）：
 
 ```env
-ZHIPU_API_KEY=your_api_key_here
-ZHIPU_MODEL=glm-4-plus
+QWEN_API_KEY=your_api_key_here
+QWEN_MODEL=qwen-plus
 ```
 
 > 未配置 API Key 时规则引擎仍正常运行，仅 AI 综合意见部分不可用。
@@ -238,7 +238,7 @@ python run.py
 archi_rule-main/
 ├── app/
 │   ├── llm/
-│   │   └── zhipu_client.py       # 智谱 GLM 调用
+│   │   └── zhipu_client.py       # 千问调用（兼容 DashScope）
 │   ├── rules/
 │   │   ├── engine.py             # 六大专业规则引擎
 │   │   └── tenant_profiles.py    # 业态画像库

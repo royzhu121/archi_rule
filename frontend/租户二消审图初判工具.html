@@ -103,6 +103,21 @@ body::before {
 .header-right {
   display: flex; align-items: center; gap: 16px;
 }
+.header-action-btn {
+  padding: 7px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,88,163,0.22);
+  background: rgba(255,255,255,0.48);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.header-action-btn:hover {
+  background: rgba(255,255,255,0.78);
+  border-color: rgba(0,88,163,0.35);
+}
 .badge-building {
   font-size: 11px; color: var(--text-primary);
   background: var(--cyan-dim);
@@ -147,7 +162,7 @@ body::before {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   overflow-y: auto;
-  padding: 24px 24px 16px;
+  padding: 24px 24px 24px;
   display: flex; flex-direction: column; gap: 16px;
   position: sticky; top: 64px; height: calc(100vh - 64px);
 }
@@ -163,7 +178,7 @@ body::before {
   display: flex; align-items: center; gap: 10px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
+  cursor: default;
   user-select: none;
 }
 .section-number {
@@ -344,9 +359,9 @@ select option { background: #F1F7FF; color: var(--text-primary); }
   font-size: 14px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.05em;
   transition: all var(--transition);
-  position: sticky;
-  bottom: 0;
-  margin-top: auto;
+  position: static;
+  margin-top: 8px;
+  flex-shrink: 0;
   z-index: 3;
   overflow: hidden;
 }
@@ -518,7 +533,7 @@ select option { background: #F1F7FF; color: var(--text-primary); }
 }
 .module-card:hover {
   border-color: rgba(255,255,255,0.15);
-  transform: translateY(-2px);
+  transform: none;
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 .module-card.status-violation {
@@ -535,7 +550,7 @@ select option { background: #F1F7FF; color: var(--text-primary); }
 .module-header {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 16px;
-  cursor: pointer;
+  cursor: default;
   border-bottom: 1px solid transparent;
   transition: all var(--transition);
 }
@@ -634,7 +649,7 @@ select option { background: #F1F7FF; color: var(--text-primary); }
 }
 .ref-item .ref-id { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
-/* GLM意见 */
+/* AI综合意见 */
 .llm-section {
   background: var(--bg-card);
   border: 1px solid rgba(168,85,247,0.25);
@@ -650,6 +665,123 @@ select option { background: #F1F7FF; color: var(--text-primary); }
 }
 .llm-header {
   display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.llm-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.mini-btn {
+  padding: 7px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(168,85,247,0.28);
+  background: rgba(168,85,247,0.08);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.mini-btn:hover {
+  background: rgba(168,85,247,0.14);
+}
+.mini-btn.primary {
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  color: #fff;
+  border-color: transparent;
+}
+.mini-btn.primary:hover {
+  filter: brightness(1.05);
+}
+.mini-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.self-check-result {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(122,147,169,0.18);
+  background: rgba(255,255,255,0.5);
+  display: none;
+}
+.self-check-result.ok {
+  border-color: rgba(16,185,129,0.25);
+  background: rgba(16,185,129,0.06);
+  color: var(--green);
+}
+.self-check-result.fail {
+  border-color: rgba(239,68,68,0.28);
+  background: rgba(239,68,68,0.06);
+  color: var(--red);
+}
+
+.qwen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13,44,79,0.28);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+}
+.qwen-modal-card {
+  width: min(560px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(0,88,163,0.18);
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 28px 60px rgba(13,44,79,0.22);
+  padding: 20px;
+}
+.qwen-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.qwen-modal-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.qwen-modal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.qwen-key-input {
+  width: 100%;
+  border: 1px solid rgba(0,88,163,0.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  background: rgba(234,242,251,0.55);
+  color: var(--text-primary);
+  outline: none;
+}
+.qwen-key-input:focus {
+  border-color: rgba(0,88,163,0.6);
+  box-shadow: var(--shadow-glow-cyan);
+}
+.qwen-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.qwen-modal-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 10px;
 }
 .llm-badge {
   font-size: 10px; padding: 3px 8px;
@@ -721,6 +853,7 @@ select option { background: #F1F7FF; color: var(--text-primary); }
     </div>
   </div>
   <div class="header-right">
+    <button class="header-action-btn" onclick="openQwenModal()">配置千问</button>
     <div class="badge-building">耐火等级一级 · 多层商业综合体</div>
     <div class="status-dot" id="statusDot">连接后端中…</div>
   </div>
@@ -752,7 +885,7 @@ select option { background: #F1F7FF; color: var(--text-primary); }
           <div class="form-row">
             <label>楼层</label>
             <div class="select-wrapper">
-              <select id="floor">
+              <select id="floor" onchange="onTenant2Change()">
                 <option>B2</option>
                 <option>B1</option>
                 <option value="1F" selected>1F</option>
@@ -865,11 +998,29 @@ select option { background: #F1F7FF; color: var(--text-primary); }
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">🏗️</div>
       <div class="empty-text">填写左侧参数，点击「开始审图」</div>
-      <div class="empty-sub">系统将基于规范条文进行六大专业模块审查，并由 GLM 生成综合意见</div>
+      <div class="empty-sub">系统将基于规范条文进行六大专业模块审查，并由 AI 生成综合意见</div>
     </div>
     <div class="results-content" id="resultsContent" style="display:none;"></div>
   </main>
 
+</div>
+
+<!-- ══ 千问配置弹窗 ══ -->
+<div class="qwen-modal" id="qwenModal" onclick="closeQwenModal(event)">
+  <div class="qwen-modal-card" onclick="event.stopPropagation()">
+    <div class="qwen-modal-title">配置千问 API Key</div>
+    <div class="qwen-modal-sub">
+      只保存在本机浏览器，不会发送到聊天里。保存后，自检按钮和审图请求会自动带上这个 Key。
+    </div>
+    <label class="qwen-modal-label" for="qwenApiKeyInput">API Key</label>
+    <input id="qwenApiKeyInput" class="qwen-key-input" type="password" placeholder="请输入千问 API Key">
+    <div class="qwen-modal-actions">
+      <button class="mini-btn" onclick="clearQwenKey()">清除</button>
+      <button class="mini-btn" onclick="closeQwenModal()">取消</button>
+      <button class="mini-btn primary" onclick="saveQwenKey()">保存并关闭</button>
+    </div>
+    <div class="qwen-modal-note" id="qwenModalNote">当前状态：未配置</div>
+  </div>
 </div>
 
 <script>
@@ -881,6 +1032,7 @@ let lastReviewRequest = null;
 let lastReviewResult = null;
 let backendOnline = false;
 let healthTimer = null;
+const QWEN_KEY_STORAGE = 'firecheck_qwen_api_key';
 const API = (() => {
   const isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
   if (isHttp) {
@@ -912,6 +1064,7 @@ const STATUS_LABELS = {
 ══════════════════════════════════════════════ */
 async function init() {
   setStatus('连接后端中…', 'amber');
+  syncQwenModalNote();
   try {
     profilesData = await fetchJSONWithRetry(`${API}/api/tenant-profiles`, {
       retries: 5,
@@ -930,6 +1083,73 @@ async function init() {
 
   // 每 10 秒自动健康检查，支持离线后自动恢复在线。
   startHealthMonitor();
+}
+
+function getStoredQwenKey() {
+  try {
+    return localStorage.getItem(QWEN_KEY_STORAGE) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function hasLocalQwenKey() {
+  return !!getStoredQwenKey().trim();
+}
+
+function getRequestHeaders(includeJson = true) {
+  const headers = {};
+  const key = getStoredQwenKey().trim();
+  if (key) {
+    headers['X-QWEN-API-KEY'] = key;
+  }
+  if (includeJson) {
+    headers['Content-Type'] = 'application/json';
+  }
+  return headers;
+}
+
+function syncQwenModalNote() {
+  const note = document.getElementById('qwenModalNote');
+  if (!note) return;
+  note.textContent = hasLocalQwenKey() ? '当前状态：已保存到本机浏览器' : '当前状态：未配置';
+}
+
+function openQwenModal() {
+  const modal = document.getElementById('qwenModal');
+  const input = document.getElementById('qwenApiKeyInput');
+  if (!modal || !input) return;
+  input.value = getStoredQwenKey();
+  modal.style.display = 'flex';
+  syncQwenModalNote();
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeQwenModal(evt) {
+  if (evt && evt.target !== evt.currentTarget) return;
+  const modal = document.getElementById('qwenModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function saveQwenKey() {
+  const input = document.getElementById('qwenApiKeyInput');
+  const value = (input?.value || '').trim();
+  if (!value) {
+    alert('请输入 API Key');
+    return;
+  }
+  localStorage.setItem(QWEN_KEY_STORAGE, value);
+  syncQwenModalNote();
+  closeQwenModal();
+  setStatus('千问 Key 已保存', 'green');
+}
+
+function clearQwenKey() {
+  localStorage.removeItem(QWEN_KEY_STORAGE);
+  const input = document.getElementById('qwenApiKeyInput');
+  if (input) input.value = '';
+  syncQwenModalNote();
+  setStatus('千问 Key 已清除', 'amber');
 }
 
 async function fetchJSONWithRetry(url, { retries = 3, retryDelay = 600, timeout = 3000 } = {}) {
@@ -1051,12 +1271,32 @@ function updateTenant2() {
   onTenant2Change();
 }
 
-function onTenant2Change() {
+async function onTenant2Change() {
   const t2 = document.getElementById('tenant2').value;
+  const t1 = document.getElementById('tenant1').value;
+  const floor = document.getElementById('floor').value;
   const badge = document.getElementById('riskBadge');
   if (!t2 || !profilesData.profiles[t2]) { badge.style.display = 'none'; return; }
   const p = profilesData.profiles[t2];
   const isAuto = p.auto_review;
+  let hazardText = p.sprinkler_hazard || '中危险级I';
+
+  if (backendOnline) {
+    try {
+      const q = `tenant_type_1=${encodeURIComponent(t1)}&tenant_type_2=${encodeURIComponent(t2)}&floor=${encodeURIComponent(floor)}`;
+      const hazardResp = await fetchJSONWithRetry(`${API}/api/sprinkler-hazard?${q}`, {
+        retries: 2,
+        retryDelay: 300,
+        timeout: 2000,
+      });
+      if (hazardResp && hazardResp.sprinkler_hazard) {
+        hazardText = hazardResp.sprinkler_hazard;
+      }
+    } catch (_) {
+      // 后端临时抖动时，回退到画像库默认值。
+    }
+  }
+
   badge.style.display = 'block';
   if (!isAuto) {
     badge.style.background = 'rgba(245,158,11,0.08)';
@@ -1067,7 +1307,7 @@ function onTenant2Change() {
     badge.style.background = 'rgba(16,185,129,0.06)';
     badge.style.border = '1px solid rgba(16,185,129,0.2)';
     badge.style.color = 'var(--green)';
-    badge.textContent = `✓ 可自动审查 · 喷淋危险等级：${p.sprinkler_hazard || '中危险级I'}`;
+    badge.textContent = `✓ 可自动审查 · 喷淋危险等级：${hazardText}`;
   }
 }
 
@@ -1135,7 +1375,7 @@ async function submitReview() {
   try {
     const res = await fetch(`${API}/api/review`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getRequestHeaders(),
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1184,7 +1424,7 @@ function renderResults(data) {
     content.appendChild(grid);
   }
 
-  // 4. GLM意见
+  // 4. AI综合意见
   if (data.llm_opinion) {
     content.appendChild(buildLLMSection(data.llm_opinion));
   }
@@ -1233,7 +1473,7 @@ async function downloadDocxReport() {
 
   const res = await fetch(`${API}/api/report-docx`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getRequestHeaders(),
     body: JSON.stringify({ request: lastReviewRequest, result: lastReviewResult }),
   });
 
@@ -1351,12 +1591,43 @@ function buildLLMSection(opinion) {
   div.className = 'llm-section';
   div.innerHTML = `
     <div class="llm-header">
-      <span class="llm-badge">GLM-4-PLUS</span>
+      <span class="llm-badge">QWEN</span>
       <span class="llm-title">AI 综合审查意见</span>
     </div>
+    <div class="llm-actions">
+      <button class="mini-btn" onclick="checkQwenSelf()">检查千问连接</button>
+    </div>
+    <div id="selfCheckResult" class="self-check-result"></div>
     <div class="llm-body">${escHtml(opinion)}</div>
   `;
   return div;
+}
+
+async function checkQwenSelf() {
+  const resultBox = document.getElementById('selfCheckResult');
+  if (!resultBox) return;
+  resultBox.style.display = 'block';
+  resultBox.className = 'self-check-result';
+  resultBox.textContent = '正在检查千问连接...';
+
+  try {
+    const res = await fetch(`${API}/api/qwen-self-check`, {
+      cache: 'no-store',
+      headers: getRequestHeaders(false),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.ok) {
+      resultBox.classList.add('ok');
+      resultBox.textContent = `可用：${data.message || 'OK'}`;
+    } else {
+      resultBox.classList.add('fail');
+      resultBox.textContent = `不可用：${data.message || '未知错误'}`;
+    }
+  } catch (err) {
+    resultBox.classList.add('fail');
+    resultBox.textContent = `检查失败：${err.message}`;
+  }
 }
 
 function renderError(msg) {

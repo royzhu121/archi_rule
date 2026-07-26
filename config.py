@@ -1,16 +1,19 @@
 """
 消防审图工具 - 配置文件
-修改 ZHIPU_API_KEY 为你的智谱API密钥
+修改 QWEN_API_KEY 为你的千问 API 密钥
 """
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── 智谱GLM配置 ────────────────────────────────────────────────
-ZHIPU_API_KEY: str = os.getenv("ZHIPU_API_KEY", "your_api_key_here")
-ZHIPU_MODEL: str = os.getenv("ZHIPU_MODEL", "glm-4-plus")  # glm-4-plus / glm-z1-preview
-ZHIPU_BASE_URL: str = os.getenv("ZHIPU_BASE_URL", "")  # 国际版填 https://open.bigmodel.cn/api/paas/v4/
+# ── 千问（DashScope 兼容模式）配置 ────────────────────────────
+QWEN_API_KEY: str = os.getenv(
+    "QWEN_API_KEY",
+    os.getenv("DASHSCOPE_API_KEY", os.getenv("ALIYUN_API_KEY", "your_api_key_here")),
+)
+QWEN_MODEL: str = os.getenv("QWEN_MODEL", "qwen-plus")
+QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 
 # ── 项目默认值 ─────────────────────────────────────────────────
 DEFAULT_SITE: str = "南宁宜家"

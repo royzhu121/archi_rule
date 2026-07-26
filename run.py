@@ -11,7 +11,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_dependencies():
     try:
-        import fastapi, uvicorn, zhipuai, pydantic
+        import fastapi, uvicorn, openai, pydantic
     except ImportError:
         print("正在安装依赖（安装失败不影响启动，可手动运行 pip install -r requirements.txt）...")
         try:
@@ -23,13 +23,13 @@ def main():
     check_dependencies()
 
     import config as cfg
-    if cfg.ZHIPU_API_KEY == "your_api_key_here":
+    if cfg.QWEN_API_KEY == "your_api_key_here":
         print("=" * 60)
-        print("⚠  提示：未配置智谱 GLM API Key")
-        print("   请在 config.py 中修改 ZHIPU_API_KEY，或创建 .env 文件：")
-        print("   ZHIPU_API_KEY=your_actual_key")
-        print("   ZHIPU_MODEL=glm-4-plus")
-        print("   (规则引擎仍可正常运行，GLM综合意见将显示提示)")
+        print("⚠  提示：未配置千问 API Key")
+        print("   请在 config.py 中修改 QWEN_API_KEY，或创建 .env 文件：")
+        print("   QWEN_API_KEY=your_actual_key")
+        print("   QWEN_MODEL=qwen-plus")
+        print("   (规则引擎仍可正常运行，AI综合意见将显示提示)")
         print("=" * 60)
 
     import uvicorn
@@ -40,7 +40,7 @@ def main():
     print(f"   服务监听: http://{cfg.HOST}:{cfg.PORT}")
     if display_host not in ("localhost", "127.0.0.1"):
         print(f"   当前推荐访问: http://{display_host}:{cfg.PORT}")
-    print(f"   模型: {cfg.ZHIPU_MODEL}")
+    print(f"   模型: {cfg.QWEN_MODEL}")
     print(f"   按 Ctrl+C 停止\n")
     uvicorn.run(
         "app.main:app",

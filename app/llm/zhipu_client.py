@@ -1,5 +1,5 @@
 """
-智谱GLM客户端
+千问客户端（DashScope 兼容模式）
 - 基于规则引擎预计算结果，生成专业审查综合意见
 - 精确注入相关标准条文原文，保证知识精度
 """
@@ -8,31 +8,47 @@ import json
 import os
 from typing import Optional
 
-from zhipuai import ZhipuAI
+from openai import OpenAI
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import config as cfg
+"""
+千问客户端（DashScope 兼容模式）
+- 基于规则引擎预计算结果，生成专业审查综合意见
+- 精确注入相关标准条文原文，保证知识精度
+"""
+
+import json
+import os
+import sys
+from typing import Optional
+
+from openai import OpenAI
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+import config as cfg
 from app.models import ReviewRequest, ReviewResult
 
-# 条文库路径
 _ARTICLES_PATH = os.path.join(os.path.dirname(__file__), "..", "standards", "articles.json")
 with open(_ARTICLES_PATH, "r", encoding="utf-8") as f:
     _ARTICLES_DB: dict = json.load(f)["articles"]
 
-_client: Optional[ZhipuAI] = None
+
+def _resolve_api_key(api_key_override: Optional[str] = None) -> str:
+    if api_key_override and api_key_override.strip():
+        return api_key_override.strip()
+    return cfg.QWEN_API_KEY
 
 
-def _get_client() -> ZhipuAI:
-    global _client
-    if _client is None:
-        if cfg.ZHIPU_API_KEY == "your_api_key_here":
-            raise ValueError("请在 config.py 或 .env 文件中配置 ZHIPU_API_KEY")
-        kwargs = {"api_key": cfg.ZHIPU_API_KEY}
-        if cfg.ZHIPU_BASE_URL:
-            kwargs["base_url"] = cfg.ZHIPU_BASE_URL
-        _client = ZhipuAI(**kwargs)
-    return _client
+def _get_client(api_key_override: Optional[str] = None) -> OpenAI:
+    api_key = _resolve_api_key(api_key_override)
+    if api_key == "your_api_key_here":
+        raise ValueError("请在 config.py、.env 或页面弹窗中配置 QWEN_API_KEY")
+    kwargs = {"api_key": api_key}
+    if cfg.QWEN_BASE_URL:
+        kwargs["base_url"] = cfg.QWEN_BASE_URL
+    return OpenAI(**kwargs)
 
 
 def _build_system_prompt() -> str:
@@ -52,18 +68,16 @@ def _build_system_prompt() -> str:
 
 
 def _build_user_prompt(req: ReviewRequest, result: ReviewResult) -> str:
-    # 收集相关条文
     relevant_articles: list[str] = []
     for mod in result.modules.values():
         for ref in mod.references:
             relevant_articles.append(
                 f"【{ref.standard} 第{ref.article}条 - {ref.title}】\n{ref.excerpt}"
             )
-    articles_text = "\n\n".join(relevant_articles[:8])  # 最多注入8条条文，控制token
+    articles_text = "\n\n".join(relevant_articles[:8])
 
-    # 计算摘要
     calc_summary = []
-    for mod_key, mod in result.modules.items():
+    for mod in result.modules.values():
         if mod.calculations:
             calc_summary.append(f"{mod.module_name}: {mod.summary}")
 
@@ -99,26 +113,53 @@ def _build_user_prompt(req: ReviewRequest, result: ReviewResult) -> str:
     return prompt
 
 
-def generate_llm_opinion(req: ReviewRequest, result: ReviewResult) -> str:
-    """调用GLM生成综合审查意见，失败时返回空字符串（不影响主流程）"""
+def generate_llm_opinion(
+    req: ReviewRequest,
+    result: ReviewResult,
+    api_key_override: Optional[str] = None,
+) -> str:
+    """调用千问生成综合审查意见，失败时返回提示（不影响主流程）"""
     try:
-        client = _get_client()
+        client = _get_client(api_key_override)
         response = client.chat.completions.create(
-            model=cfg.ZHIPU_MODEL,
+            model=cfg.QWEN_MODEL,
             messages=[
                 {"role": "system", "content": _build_system_prompt()},
                 {"role": "user", "content": _build_user_prompt(req, result)},
             ],
-            temperature=0.2,   # 低温度，保证专业准确性
-            max_tokens=3000,
+            temperature=0.2,
+            max_tokens=1200,
         )
         msg = response.choices[0].message
-        # 兼容推理模型（GLM-4.7 等）：content 为空时回退到 reasoning_content
         text = (msg.content or "").strip()
         if not text and hasattr(msg, "reasoning_content") and msg.reasoning_content:
             text = msg.reasoning_content.strip()
         return text
     except ValueError as e:
-        return f"[GLM未配置] {e}"
+        return f"[千问未配置] {e}"
     except Exception as e:
-        return f"[GLM调用失败] {str(e)}"
+        return f"[千问调用失败] {str(e)}"
+
+
+def self_check_qwen(api_key_override: Optional[str] = None) -> tuple[bool, str]:
+    """做一次最小调用，验证千问 API Key 是否可用。"""
+    try:
+        client = _get_client(api_key_override)
+        response = client.chat.completions.create(
+            model=cfg.QWEN_MODEL,
+            messages=[
+                {"role": "system", "content": "你只需回复 OK。"},
+                {"role": "user", "content": "ping"},
+            ],
+            temperature=0,
+            max_tokens=5,
+        )
+        msg = response.choices[0].message
+        text = (msg.content or "").strip()
+        if not text and hasattr(msg, "reasoning_content") and msg.reasoning_content:
+            text = msg.reasoning_content.strip()
+        return True, text or "OK"
+    except ValueError as e:
+        return False, str(e)
+    except Exception as e:
+        return False, str(e)
