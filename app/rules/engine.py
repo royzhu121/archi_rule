@@ -109,7 +109,9 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     suggestions: list[str] = []
     status = "pass"
 
-    hazard = profile.get("sprinkler_hazard", "中危险级I")
+    normative_hazard = profile.get("normative_sprinkler_hazard", "中危险级I")
+    hazard = profile.get("sprinkler_hazard", normative_hazard)
+    design = profile.get("sprinkler_design", {})
     if hazard == "中危险级I":
         max_area = 12.5
         max_spacing = 3.6
@@ -133,7 +135,23 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
         ceiling_note = "通透率≤70%：视为封闭吊顶，吊顶上下均需设置喷头"
         status = "warning"
 
-    details.append(f"✦ 业态危险等级：{hazard}（依 GB50084-2017 第6.1.1条）")
+    details.append(f"✦ 规范危险等级：{normative_hazard}（分类原则见 GB50084-2017 第6.1.1条）")
+    details.append(f"✦ 本项目原设计采用：{hazard}（项目设计说明，仅用于既有系统校核）")
+    if design:
+        design_items = [
+            ("系统", design.get("system_type")),
+            ("喷水强度", design.get("spray_intensity")),
+            ("作用面积", design.get("action_area")),
+            ("设计流量", design.get("design_flow")),
+            ("喷头", design.get("k_factor")),
+            ("温标", design.get("temperature")),
+            ("安装", design.get("orientation")),
+            ("响应", design.get("response")),
+            ("吊顶", design.get("ceiling")),
+        ]
+        details.append("✦ 项目设计参数：" + "；".join(
+            f"{label}{value}" for label, value in design_items if value
+        ))
     details.append(f"✦ 每只喷头最大保护面积：{max_area} ㎡")
     details.append(f"✦ 喷头最大水平间距：{max_spacing} m，最小间距：{min_spacing} m")
     details.append(f"✦ 本租户面积 {req.area} ㎡，理论最少喷头数量：≥ {min_heads} 只")
@@ -152,18 +170,31 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     if req.new_wall and not req.wall_to_ceiling:
         impacts.append("ℹ 新增隔断（未到顶）：通常不影响喷头保护范围，但需确认隔断高度不影响洒水效果")
     if req.high_shelves:
-        impacts.append("⚠ 高柜/高货架：货架高度超过3.5m时，需在货架内补设货架型喷头")
-        suggestions.append("货架高度>3.5m时，依 GB50084-2017 第7.1.4条在货架层内补设喷头")
+        impacts.append("⚠ 高柜/高货架：储存方式、货物类别及堆高会改变喷淋设计条件，须按实际情况复核")
+        suggestions.append("结合原设计分区、货物类别、货架与净高人工校核，不得直接套用普通商铺参数")
         status = "warning" if status != "violation" else status
 
-    refs = _refs("GB50084-2017_6.1.1", "GB50084-2017_7.2.1", "GB50084-2017_7.2.3", "GB50084-2017_7.2.4")
+    refs = _refs(
+        "GB50084-2017_6.1.1",
+        "GB50084-2017_6.2.1",
+        "GB50084-2017_7.2.1",
+        "GB50084-2017_7.2.3",
+        "GB50084-2017_7.2.4",
+    )
     return ModuleResult(
         module_name="自动喷水灭火系统",
         status=status,
-        summary=f"危险等级 {hazard}，喷头间距≤{max_spacing}m，保护面积≤{max_area}㎡/只，估算≥{min_heads}只",
+        summary=f"项目采用 {hazard}，喷头间距≤{max_spacing}m，保护面积≤{max_area}㎡/只，估算≥{min_heads}只",
         details=details,
-        calculations={"hazard_level": hazard, "max_area_per_head": max_area,
-                      "max_spacing": max_spacing, "min_heads": min_heads},
+        calculations={
+            "hazard_level": hazard,
+            "normative_hazard_level": normative_hazard,
+            "design_basis": profile.get("sprinkler_basis"),
+            "design_parameters": design,
+            "max_area_per_head": max_area,
+            "max_spacing": max_spacing,
+            "min_heads": min_heads,
+        },
         impacts=impacts,
         references=refs,
         suggestions=suggestions,
