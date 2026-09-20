@@ -42,6 +42,15 @@ def _refs(*ids: str) -> list[ArticleRef]:
 def check_manual_triggers(req: ReviewRequest, profile: Optional[dict]) -> list[str]:
     reasons = []
 
+    if profile is None:
+        reasons.append(f"未知业态类型：{req.tenant_type_2}，超出固定画像范围，须转人工复核")
+
+    if profile and profile.get("level1") != req.tenant_type_1:
+        reasons.append(
+            f"一级业态“{req.tenant_type_1}”与二级业态“{req.tenant_type_2}”不匹配，"
+            "不得套用其他业态画像，须转人工复核"
+        )
+
     # 业态本身是高风险
     if profile and not profile.get("auto_review", False):
         reasons.append(profile.get("manual_reason", "业态属高风险，须人工复核"))
@@ -109,8 +118,8 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
     suggestions: list[str] = []
     status = "pass"
 
-    normative_hazard = profile.get("normative_sprinkler_hazard", "中危险级I")
-    hazard = profile.get("sprinkler_hazard", normative_hazard)
+    normative_hazard = profile["normative_sprinkler_hazard"]
+    hazard = profile["sprinkler_hazard"]
     design = profile.get("sprinkler_design", {})
     if hazard == "中危险级I":
         max_area = 12.5
@@ -135,8 +144,11 @@ def check_sprinkler(req: ReviewRequest, profile: dict) -> ModuleResult:
         ceiling_note = "通透率≤70%：视为封闭吊顶，吊顶上下均需设置喷头"
         status = "warning"
 
-    details.append(f"✦ 规范危险等级：{normative_hazard}（分类原则见 GB50084-2017 第6.1.1条）")
-    details.append(f"✦ 本项目原设计采用：{hazard}（项目设计说明，仅用于既有系统校核）")
+    details.append(
+        f"✦ 固定建筑边界下的审查分类：{normative_hazard}"
+        "（大型商业综合体语境；分类依据见 GB50084-2017 附录A核验摘要）"
+    )
+    details.append(f"✦ 本项目原设计采用：{hazard}（项目设计说明，仅用于本项目既有系统校核）")
     if design:
         design_items = [
             ("系统", design.get("system_type")),
@@ -211,7 +223,7 @@ def check_smoke_exhaust(req: ReviewRequest, profile: dict) -> ModuleResult:
     status = "pass"
 
     area = req.area
-    need_exhaust = area > 100  # 公共建筑>100㎡常有人停留
+    need_exhaust = True
 
     # 排烟量计算（GB51251-2017 第4.6.3条）
     q_calc = 60 * area          # m³/h
@@ -229,21 +241,19 @@ def check_smoke_exhaust(req: ReviewRequest, profile: dict) -> ModuleResult:
 
     details.append(f"✦ 本租户面积 {area} ㎡，净空高度 {req.ceiling_height} m")
     if need_exhaust:
-        details.append(f"✦ 面积>100㎡且常有人停留，须设置机械排烟（GB51251-2017 第4.1.4条）")
+        details.append("✦ 本建筑既有机械排烟系统完整设置；本次仅校核装修后排烟口、风路和原设计能力不被破坏")
         details.append(f"")
         details.append(f"【排烟量计算步骤】")
         details.append(f"  ① 按面积计算：Q₁ = 60 × {area} = {q_calc:,.0f} m³/h")
         details.append(f"  ② 最小排烟量：Q_min = {q_min:,} m³/h")
-        details.append(f"  ③ 设计排烟量：Q = max({q_calc:,.0f}, {q_min:,}) = {q_design:,.0f} m³/h")
-        details.append(f"  ④ 排烟口设计面积：F = Q/(v×3600) = {q_design:,.0f}/(10×3600) = {vent_area} ㎡")
-        details.append(f"  ⑤ 排烟口数量：不少于 {vent_count} 个（每防烟分区≥1个）")
+        details.append(f"  ③ 初步核验值：Q = max({q_calc:,.0f}, {q_min:,}) = {q_design:,.0f} m³/h")
+        details.append(f"  ④ 按风速上限反算的排烟口净面积核验值：F = {vent_area} ㎡")
+        details.append(f"  ⑤ 防烟分区及排烟口数量不得按租户面积重新划分，须与原设计图纸逐点核对")
         details.append(f"  ⑥ 挡烟垂壁有效高度：≥ {smoke_curtain_height} m（净空×10%，且≥500mm）")
         details.append(f"")
         details.append(f"✦ 补风量要求：不小于排烟量的50%，即补风量 ≥ {q_design*0.5:,.0f} m³/h")
         details.append(f"✦ 排烟口至最远点水平距离：不应超过30m（须在图纸上核实）")
-    else:
-        details.append(f"✦ 面积较小，可采用自然排烟（开口面积≥地面面积2%），须核实外窗情况")
-        status = "warning"
+        details.append("✦ 上述数值仅作原系统能力比对，不能替代原设计风量、风管阻力及系统联动复核")
 
     if req.block_smoke_vent:
         impacts.append("🚨 有遮挡排烟口情形：排烟口必须保持畅通，严禁遮挡")
@@ -299,13 +309,10 @@ def check_alarm(req: ReviewRequest, profile: dict) -> ModuleResult:
     n_detectors = max(1, n_detectors)
 
     # 应急广播数量
-    n_speakers = max(1, math.ceil(area / 150))  # 约150㎡/个
-    speaker_power = "10W" if area > 100 else "3W"
-
     details.append(f"✦ 探测器类型：{detector_type}（依业态画像库选取）")
     details.append(f"✦ 保护面积 A = {A_detector} ㎡，修正系数 k = {k}（GB50116-2013 第6.2.9条）")
     details.append(f"✦ 探测器数量：N = ⌈{area} / ({k}×{A_detector})⌉ = ⌈{area/(k*A_detector):.2f}⌉ = {n_detectors} 只（最少）")
-    details.append(f"✦ 应急广播：不少于 {n_speakers} 个，功率 {speaker_power}")
+    details.append("✦ 应急广播须接入既有系统，并按装修后实际平面校核声压级与最远点距离；不得按面积比例臆算数量或功率")
     details.append(f"✦ 手动报警按钮：任意点步行距离≤30m（需在平面图上校核）")
     details.append(f"✦ 本建筑已有火灾自动报警系统，二次装修须在原系统基础上增设或调整点位")
 
@@ -332,13 +339,12 @@ def check_alarm(req: ReviewRequest, profile: dict) -> ModuleResult:
     return ModuleResult(
         module_name="火灾自动报警",
         status=status,
-        summary=f"{detector_type} ≥{n_detectors}只，应急广播 ≥{n_speakers}个（{speaker_power}）",
+        summary=f"{detector_type}初步估算≥{n_detectors}只；广播按既有系统声压级和最远点实测/图纸复核",
         details=details,
         calculations={
             "detector_type": detector_type,
             "detector_count_min": n_detectors,
-            "speaker_count_min": n_speakers,
-            "speaker_power": speaker_power,
+            "speaker_check": "按既有系统设计及装修后最远点复核",
         },
         impacts=impacts,
         references=refs,
@@ -358,16 +364,13 @@ def check_evacuation_lighting(req: ReviewRequest, profile: dict) -> ModuleResult
     area = req.area
     room_length = req.room_max_length if req.room_max_length > 0 else math.sqrt(area)
 
-    # 安全出口标志（每个疏散出口1个）
-    exit_signs = max(1, math.ceil(area / 500))  # 简化估算
-
     # 疏散指示间距≤20m
     evacuation_signs = max(1, math.ceil(room_length / 20))
 
     # 标志规格
     sign_spec = "≥400mm×200mm（安装高度>3.5m）" if req.ceiling_height > 3.5 else "≥200mm×100mm（安装高度≤3.5m）"
 
-    details.append(f"✦ 安全出口标志灯：每个疏散出口正上方各设1个，共 ≥{exit_signs} 个")
+    details.append("✦ 安全出口标志灯：装修后每个实际疏散出口均须设置；出口数量不得由租户面积比例推算")
     details.append(f"✦ 标志灯规格：{sign_spec}（GB51309-2018 第3.2.9条）")
     details.append(f"✦ 疏散方向标志：沿疏散路径间距≤20m，依走道最长边 ~{room_length:.0f}m 估算 ≥{evacuation_signs} 个")
     details.append(f"✦ 标志灯安装高度：出口标志灯≥2.0m，疏散指示≤1.0m（墙面低位）")
@@ -387,10 +390,10 @@ def check_evacuation_lighting(req: ReviewRequest, profile: dict) -> ModuleResult
     return ModuleResult(
         module_name="消防应急照明和疏散指示",
         status=status,
-        summary=f"出口标志灯 ≥{exit_signs}个，疏散指示 ≥{evacuation_signs}个，规格{sign_spec}",
+        summary=f"出口标志按实际出口逐一校核，疏散指示按路径初步估算≥{evacuation_signs}个，规格{sign_spec}",
         details=details,
         calculations={
-            "exit_sign_count_min": exit_signs,
+            "exit_sign_check": "每个实际疏散出口逐一校核",
             "evacuation_indicator_count_min": evacuation_signs,
             "sign_spec": sign_spec,
         },
@@ -423,9 +426,6 @@ def check_hydrant_extinguisher(req: ReviewRequest, profile: dict) -> ModuleResul
     # Step2: 保护距离（中危险级A类: 20m）
     protection_distance = 20
 
-    # Step3: 配置数量（中危险级，每具保护面积75㎡，最少2具）
-    n_extinguishers = max(2, math.ceil(area / 75))
-
     details.append(f"【Step 1 - 火灾类别确认】")
     details.append(f"  ✦ 火灾类别：{fire_class_desc}")
     details.append(f"  ✦ 推荐灭火器类型：{extinguisher_type}")
@@ -435,14 +435,13 @@ def check_hydrant_extinguisher(req: ReviewRequest, profile: dict) -> ModuleResul
     details.append(f"  ✦ 需在平面图上核实：任意点到最近灭火器步行距离≤{protection_distance}m")
     details.append(f"")
     details.append(f"【Step 3 - 设置条件校核（GB50140-2005 第6.2.1条）】")
-    details.append(f"  ✦ 最少灭火器数量：≥{n_extinguishers}具（面积{area}㎡，每具保护≤75㎡）")
-    details.append(f"  ✦ 每个计算单元不少于2具")
+    details.append("  ✦ 每个计算单元不少于2具；具体数量须结合危险等级、灭火级别和最大保护距离计算，不按面积/75㎡简化")
     details.append(f"  ✦ 设置位置：明显可见、便于取用、不得堵塞疏散通道")
     details.append(f"")
     details.append(f"【消火栓底线要求（GB50974-2014 第7.4.2条）】")
     details.append(f"  ✦ 严禁对消火栓箱进行遮挡、包封或圈占")
     details.append(f"  ✦ 消火栓箱门须能在120°范围内自由开启")
-    details.append(f"  ✦ 装修后须校核新平面下任一点的消火栓可达性（保护半径25m）")
+    details.append("  ✦ 装修后须按原设计水带长度、充实水柱及实际通行路径校核两股水柱覆盖，不使用固定25m半径替代")
 
     if req.block_hydrant:
         impacts.append("🚨 有遮挡消火栓情形：消火栓被遮挡属严重违规，须立即整改")
@@ -456,12 +455,12 @@ def check_hydrant_extinguisher(req: ReviewRequest, profile: dict) -> ModuleResul
     return ModuleResult(
         module_name="消火栓及灭火器",
         status=status,
-        summary=f"灭火器≥{n_extinguishers}具（{extinguisher_type}），保护距离≤{protection_distance}m，消火栓严禁遮挡",
+        summary=f"灭火器按计算单元及灭火级别复核（{extinguisher_type}），保护距离≤{protection_distance}m，消火栓严禁遮挡",
         details=details,
         calculations={
             "fire_class": fire_class_desc,
             "extinguisher_type": extinguisher_type,
-            "extinguisher_count_min": n_extinguishers,
+            "extinguisher_count_check": "按计算单元、灭火级别及保护距离复核",
             "protection_distance_m": protection_distance,
         },
         impacts=impacts,
@@ -493,15 +492,6 @@ def run_review(req: ReviewRequest) -> ReviewResult:
             highlights=[f"🔴 {r}" for r in manual_reasons],
         )
 
-    if profile is None:
-        profile = {
-            "sprinkler_hazard": "中危险级I",
-            "detector_type": "感烟探测器",
-            "fire_class": "A",
-            "decoration_space": "营业厅",
-            "notes": [],
-        }
-
     # 六大专业模块并行计算
     modules_result: dict[str, ModuleResult] = {
         "decoration": check_decoration(req, profile),
@@ -527,8 +517,8 @@ def run_review(req: ReviewRequest) -> ReviewResult:
         "本工具结论仅供参考，任何情况下均须经消防专业工程师复核确认。"
         if has_violation else
         "【审查完成】各专业初步审查结论见下方各模块。"
-        "本工具覆盖约80%常规租户场景，结论仅供参考，须经消防专业工程师复核确认，"
-        "并应遵循规范条文及企业要求。"
+        "结论仅适用于本工具声明的固定建筑边界，并须经消防专业工程师结合原设计图纸、"
+        "现场条件和现行规范复核确认。"
     )
 
     return ReviewResult(

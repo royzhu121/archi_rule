@@ -3,11 +3,9 @@
 映射规则：二级业态 → 消防风险配置
 适用建筑：耐火等级一级多层民用建筑（商业综合体）
 
-喷淋数据分为两层：
-1. normative_sprinkler_hazard：仓库内 GB50084 条文数据支持的规范分类；
-2. sprinkler_hazard / sprinkler_design：项目原设计采用的等级和设计参数。
-
-项目参数来自本项目设计说明，仅用于校核既有系统，不作为通用规范参数。
+所有画像均受固定建筑边界约束。normative_sprinkler_hazard 表示在本大型商业
+综合体语境下的审查分类；sprinkler_hazard / sprinkler_design 表示项目原设计
+采用值。项目参数仅用于本项目既有系统校核，不作为其他项目的通用参数。
 """
 
 from typing import Optional
@@ -236,16 +234,16 @@ TENANT_PROFILES: dict[str, dict] = {
     "服装/鞋履/箱包/化妆品/珠宝/钟表": _profile(
         level1="普通商业零售类",
         fire_risk="low",
-        normative_hazard="中危险级I",
+        normative_hazard="中危险级II",
         design=PROJECT_MALL_SHOP,
-        description="普通商店规范分类为中危险级I；本项目MALL商铺原设计按中危险级II校核。",
+        description="本大型商业综合体总建筑面积超过5000㎡，普通MALL零售商铺按中危险级II及项目设计参数校核。",
     ),
     "便利店/超市（无明火）": _profile(
         level1="普通商业零售类",
         fire_risk="low",
-        normative_hazard="中危险级I",
+        normative_hazard="中危险级II",
         design=PROJECT_MALL_SHOP,
-        description="非仓储式超市规范分类为中危险级I；本项目商铺原设计按中危险级II校核。",
+        description="本大型商业综合体内非仓储式便利店/超市按MALL商铺中危险级II基准校核；储存条件变化时转人工。",
         notes=["货架或储存方式改变时，不得沿用普通商铺参数，应按实际货物与堆高人工复核"],
     ),
     "小商品销售区": _profile(
@@ -265,17 +263,17 @@ TENANT_PROFILES: dict[str, dict] = {
     "中餐（无明火）": _profile(
         level1="餐饮（不使用明火）",
         fire_risk="medium_low",
-        normative_hazard="中危险级I",
+        normative_hazard="中危险级II",
         design=PROJECT_RESTAURANT,
-        description="无明火轻餐饮规范分类为中危险级I；本项目餐厅部原设计按中危险级II校核。",
+        description="本大型商业综合体内无明火餐饮按餐厅部中危险级II及项目设计参数校核。",
         notes=["厨房区域应单独设置感温探测器", "厨房排油烟管道需做防火处理"],
     ),
     "西餐（无明火）": _profile(
         level1="餐饮（不使用明火）",
         fire_risk="medium_low",
-        normative_hazard="中危险级I",
+        normative_hazard="中危险级II",
         design=PROJECT_RESTAURANT,
-        description="无明火轻餐饮规范分类为中危险级I；本项目餐厅部原设计按中危险级II校核。",
+        description="本大型商业综合体内无明火餐饮按餐厅部中危险级II及项目设计参数校核。",
         notes=["厨房操作间需设置感温探测器"],
     ),
     "中央厨房复热餐厅": _profile(
@@ -345,9 +343,9 @@ TENANT_PROFILES: dict[str, dict] = {
     "健身房/瑜伽/攀岩": _profile(
         level1="运动休闲类",
         fire_risk="low",
-        normative_hazard="中危险级I",
+        normative_hazard="中危险级II",
         design=PROJECT_MALL_SHOP,
-        description="按普通商店相近用途归为中危险级I；本项目商铺原设计按中危险级II校核。",
+        description="本大型商业综合体内运动休闲租户按MALL商铺中危险级II基准校核；攀岩等大空间另行人工复核。",
         notes=["攀岩等大净空区域需核实排烟量、喷头安装高度和原系统适用性"],
     ),
     "银行/美容美发/后勤": _profile(

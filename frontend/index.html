@@ -122,6 +122,25 @@ body::before {
   background: var(--green);
   animation: pulse 2s infinite;
 }
+.download-btn {
+  padding: 7px 12px;
+  border: 1px solid rgba(0,212,255,0.35);
+  border-radius: 8px;
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font: 600 12px 'Inter', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.download-btn:hover:not(:disabled) {
+  background: rgba(0,212,255,0.2);
+  box-shadow: var(--shadow-glow-cyan);
+}
+.download-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -619,7 +638,7 @@ select option { background: #1a2540; color: var(--text-primary); }
 }
 .ref-item .ref-id { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
-/* GLM意见 */
+/* AI 意见 */
 .llm-section {
   background: var(--bg-card);
   border: 1px solid rgba(168,85,247,0.25);
@@ -689,6 +708,11 @@ select option { background: #1a2540; color: var(--text-primary); }
   .modules-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
+  .header { height: auto; min-height: 64px; padding: 10px 14px; gap: 10px; }
+  .header-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge-building { display: none; }
+  .status-dot { font-size: 11px; }
+  .download-btn { max-width: 100%; padding: 6px 9px; font-size: 11px; }
   .app-layout { grid-template-columns: 1fr; height: auto; }
   .input-panel {
     position: static;
@@ -718,6 +742,9 @@ select option { background: #1a2540; color: var(--text-primary); }
   <div class="header-right">
     <div class="badge-building">耐火等级一级 · 多层商业综合体</div>
     <div class="status-dot" id="statusDot">系统就绪</div>
+    <button class="download-btn" id="downloadBtn" type="button" onclick="downloadReport()" disabled>
+      下载审图结果
+    </button>
   </div>
 </header>
 
@@ -911,7 +938,7 @@ select option { background: #1a2540; color: var(--text-primary); }
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">🏗️</div>
       <div class="empty-text">填写左侧参数，点击「开始审图」</div>
-      <div class="empty-sub">系统将基于规范条文进行六大专业模块审查，并由 GLM 生成综合意见</div>
+      <div class="empty-sub">系统仅在固定大型商业综合体边界内审查六大专业模块，并由 MiMo 生成辅助意见</div>
     </div>
     <div class="results-content" id="resultsContent" style="display:none;"></div>
   </main>
@@ -923,9 +950,8 @@ select option { background: #1a2540; color: var(--text-primary); }
    全局状态
 ══════════════════════════════════════════════ */
 let profilesData = null;
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://127.0.0.1:8001'
-  : '';
+let currentReview = null;
+const API = '';
 
 const MODULE_CONFIG = {
   decoration:    { icon: '🎨', label: '内装修防火' },
@@ -1058,6 +1084,7 @@ function toggleDanger(id, el) {
 ══════════════════════════════════════════════ */
 async function submitReview() {
   const btn = document.getElementById('submitBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
   const area = parseFloat(document.getElementById('area').value);
   const t1 = document.getElementById('tenant1').value;
   const t2 = document.getElementById('tenant2').value;
@@ -1066,6 +1093,8 @@ async function submitReview() {
   if (!area || area <= 0) { alert('请输入有效的房间面积'); return; }
 
   btn.disabled = true;
+  downloadBtn.disabled = true;
+  currentReview = null;
   btn.classList.add('loading');
   btn.textContent = '';
   setStatus('审查中…', 'amber');
@@ -1101,7 +1130,9 @@ async function submitReview() {
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    currentReview = { request: payload, result: data };
     renderResults(data);
+    downloadBtn.disabled = false;
     setStatus('审查完成', 'green');
   } catch (e) {
     setStatus('请求失败', 'red');
@@ -1110,6 +1141,40 @@ async function submitReview() {
     btn.disabled = false;
     btn.classList.remove('loading');
     btn.textContent = '重新审图';
+  }
+}
+
+async function downloadReport() {
+  const btn = document.getElementById('downloadBtn');
+  if (!currentReview || btn.disabled) return;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '生成中…';
+  try {
+    const res = await fetch(`${API}/api/review/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentReview),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const filename = encodedName ? decodeURIComponent(encodedName[1]) : '消防审图结果.docx';
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    setStatus('下载失败', 'red');
+    alert(`Word 报告下载失败：${e.message}`);
+  } finally {
+    btn.disabled = !currentReview;
+    btn.textContent = originalText;
   }
 }
 
@@ -1140,7 +1205,7 @@ function renderResults(data) {
     content.appendChild(grid);
   }
 
-  // 4. GLM意见
+  // 4. AI 意见
   if (data.llm_opinion) {
     content.appendChild(buildLLMSection(data.llm_opinion));
   }
@@ -1271,7 +1336,7 @@ function buildLLMSection(opinion) {
   div.className = 'llm-section';
   div.innerHTML = `
     <div class="llm-header">
-      <span class="llm-badge">GLM-4-PLUS</span>
+      <span class="llm-badge">XIAOMI MIMO</span>
       <span class="llm-title">AI 综合审查意见</span>
     </div>
     <div class="llm-body">${escHtml(opinion)}</div>
