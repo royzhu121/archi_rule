@@ -105,7 +105,10 @@ async def download_review_report(payload: ReviewReportRequest):
 
 @app.get("/api/health")
 async def health():
-    ai = cfg.get_ai_config()
+    try:
+        ai = cfg.get_ai_config()
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {
         "status": "ok",
         "ai": {
