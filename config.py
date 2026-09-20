@@ -9,7 +9,13 @@ MIMO_API_KEY: str = os.getenv("MIMO_API_KEY", "")
 MIMO_MODEL: str = os.getenv("MIMO_MODEL", "mimo-v2.5-pro")
 MIMO_BASE_URL: str = os.getenv("MIMO_BASE_URL", "https://api.xiaomimimo.com/v1").rstrip("/")
 
-# 兼容旧部署；当未配置 MiMo 且存在 ZHIPU_API_KEY 时自动使用智谱。
+QWEN_API_KEY: str = os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY", "")
+QWEN_MODEL: str = os.getenv("QWEN_MODEL", "qwen-plus")
+QWEN_BASE_URL: str = os.getenv(
+    "QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
+).rstrip("/")
+
+# 兼容旧智谱部署。
 ZHIPU_API_KEY: str = os.getenv("ZHIPU_API_KEY", "")
 ZHIPU_MODEL: str = os.getenv("ZHIPU_MODEL", "glm-4-plus")
 ZHIPU_BASE_URL: str = os.getenv(
@@ -21,13 +27,28 @@ AI_TIMEOUT_SECONDS: float = float(os.getenv("AI_TIMEOUT_SECONDS", "45"))
 
 
 def get_ai_config() -> dict[str, object]:
-    """返回不含密钥值的生效配置，并保留旧智谱环境变量迁移路径。"""
+    """返回生效配置；auto 按千问、MiMo、智谱的顺序选择已配置项。"""
     provider = AI_PROVIDER
     if provider == "auto":
-        provider = "mimo" if MIMO_API_KEY else "zhipu" if ZHIPU_API_KEY else "mimo"
-    if provider not in {"mimo", "zhipu"}:
-        raise ValueError("AI_PROVIDER 仅支持 auto、mimo 或 zhipu")
+        if QWEN_API_KEY:
+            provider = "qwen"
+        elif MIMO_API_KEY:
+            provider = "mimo"
+        elif ZHIPU_API_KEY:
+            provider = "zhipu"
+        else:
+            provider = "qwen"
+    if provider not in {"qwen", "mimo", "zhipu"}:
+        raise ValueError("AI_PROVIDER 仅支持 auto、qwen、mimo 或 zhipu")
 
+    if provider == "qwen":
+        return {
+            "provider": "qwen",
+            "api_key": QWEN_API_KEY,
+            "model": QWEN_MODEL,
+            "base_url": QWEN_BASE_URL,
+            "configured": bool(QWEN_API_KEY),
+        }
     if provider == "mimo":
         return {
             "provider": "mimo",

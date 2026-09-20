@@ -129,7 +129,7 @@ FireCheck Pro 专用于一座已建成投运、耐火等级一级的**多层民�
 |------|------|
 | 后端 | Python 3.11+ · FastAPI · Uvicorn |
 | 前端 | 原生 HTML / CSS / JavaScript（无框架） |
-| AI   | 小米 MiMo OpenAI 兼容 API；兼容旧智谱环境变量 |
+| AI   | 阿里云百炼千问、MiMo、智谱 OpenAI 兼容 API |
 | 报告 | python-docx 生成 A4 `.docx` |
 | 规范库 | GB50016 / GB50084 / GB50116 / GB50222 / GB50974 / GB51251 / GB51309 核验摘要 |
 
@@ -155,17 +155,30 @@ pip install -r requirements.txt
 复制 `.env.example` 为 `.env`，密钥不得写入代码或提交：
 
 ```env
-AI_PROVIDER=mimo
-MIMO_API_KEY=your_api_key
-MIMO_MODEL=mimo-v2.5-pro
-MIMO_BASE_URL=https://api.xiaomimimo.com/v1
+AI_PROVIDER=qwen
+QWEN_API_KEY=your_api_key
+QWEN_MODEL=qwen-plus
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 
-默认值依据小米官方文档：[首次 API 调用](https://mimo.mi.com/static/docs/quick-start/summary/first-api-call.md)、[模型选择](https://mimo.mi.com/static/docs/quick-start/summary/model.md)及 [OpenAI Chat Completions](https://mimo.mi.com/static/docs/api/chat/openai-api.md)。Token Plan 用户须将 `MIMO_BASE_URL` 改为控制台显示的专用区域地址。
+千问通过阿里云百炼 [OpenAI 兼容接口](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope) 调用，默认模型为 `qwen-plus`。`QWEN_API_KEY` 可改用别名 `DASHSCOPE_API_KEY`；若两者同时存在，优先使用 `QWEN_API_KEY`。API Key 必须与 `QWEN_BASE_URL` 所在地域匹配。
 
-旧部署可继续设置 `AI_PROVIDER=zhipu`、`ZHIPU_API_KEY`、`ZHIPU_MODEL` 和 `ZHIPU_BASE_URL`。未配置密钥时规则引擎仍运行，但 AI 字段明确返回未配置状态；不会伪造成功。
+`AI_PROVIDER` 支持 `qwen`、`mimo`、`zhipu` 和 `auto`。`auto` 依次选择已配置的千问、MiMo、智谱密钥；均未配置时显示千问未配置状态。MiMo 使用 `MIMO_API_KEY` / `MIMO_MODEL` / `MIMO_BASE_URL`，旧智谱部署继续使用 `ZHIPU_API_KEY` / `ZHIPU_MODEL` / `ZHIPU_BASE_URL`。未配置密钥时规则引擎仍运行，但 AI 字段明确返回未配置状态。
 
-### 4. 启动
+### 4. Zeabur 配置
+
+在 Zeabur 服务的环境变量中设置以下非敏感值：
+
+```env
+AI_PROVIDER=qwen
+QWEN_MODEL=qwen-plus
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+AI_TIMEOUT_SECONDS=45
+```
+
+另将密钥作为敏感环境变量设置为 `QWEN_API_KEY`（也可使用 `DASHSCOPE_API_KEY`），不要写入仓库或构建日志。`PORT` 由 Zeabur 注入，无需手工固定。
+
+### 5. 启动
 
 ```bash
 python run.py
@@ -181,7 +194,7 @@ python run.py
 archi_rule/
 ├── app/
 │   ├── llm/
-│   │   └── zhipu_client.py       # MiMo/智谱 OpenAI 兼容调用（保留旧模块路径）
+│   │   └── zhipu_client.py       # 千问/MiMo/智谱调用（保留旧模块路径）
 │   ├── reports.py                # A4 Word 报告
 │   ├── rules/
 │   │   ├── engine.py             # 六大专业规则引擎

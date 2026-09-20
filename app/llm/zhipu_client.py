@@ -1,4 +1,4 @@
-"""OpenAI 兼容 AI 客户端；默认使用小米 MiMo，并兼容旧智谱配置。"""
+"""OpenAI 兼容 AI 客户端；支持千问、MiMo 和智谱。"""
 
 import json
 import os
@@ -23,11 +23,9 @@ def _get_client(base_url: str, api_key: str, provider: str) -> httpx.Client:
     if _client is None or _client_signature != signature:
         if _client is not None:
             _client.close()
-        auth_headers = (
-            {"api-key": api_key}
-            if provider == "mimo"
-            else {"Authorization": f"Bearer {api_key}"}
-        )
+        auth_headers = {"api-key": api_key}
+        if provider != "mimo":
+            auth_headers = {"Authorization": "Bearer " + api_key}
         _client = httpx.Client(
             base_url=f"{base_url.rstrip('/')}/",
             headers={**auth_headers, "Content-Type": "application/json"},
@@ -104,27 +102,42 @@ def generate_llm_opinion(req: ReviewRequest, result: ReviewResult) -> str:
         return f"[AI配置错误] {exc}"
     provider = str(ai["provider"])
     if not ai["configured"]:
-        key_name = "MIMO_API_KEY" if provider == "mimo" else "ZHIPU_API_KEY"
+        key_name = {
+            "qwen": "QWEN_API_KEY（或 DASHSCOPE_API_KEY）",
+            "mimo": "MIMO_API_KEY",
+            "zhipu": "ZHIPU_API_KEY",
+        }[provider]
         return f"[AI未配置] 当前 provider={provider}，请设置环境变量 {key_name}"
 
     try:
+        payload: dict[str, Any] = {
+            "model": ai["model"],
+            "messages": [
+                {"role": "system", "content": _build_system_prompt()},
+                {"role": "user", "content": _build_user_prompt(req, result)},
+            ],
+            "temperature": 0.2,
+        }
+        if provider == "mimo":
+            payload.update(
+                {
+                    "thinking": {"type": "disabled"},
+                    "max_completion_tokens": 3000,
+                }
+            )
+        else:
+            payload["max_tokens"] = 3000
+
         response = _get_client(str(ai["base_url"]), str(ai["api_key"]), provider).post(
             "chat/completions",
-            json={
-                "model": ai["model"],
-                "messages": [
-                    {"role": "system", "content": _build_system_prompt()},
-                    {"role": "user", "content": _build_user_prompt(req, result)},
-                ],
-                "thinking": {"type": "disabled"},
-                "temperature": 0.2,
-                "max_completion_tokens": 3000,
-            },
+            json=payload,
         )
         response.raise_for_status()
         return _extract_content(response.json())
     except httpx.HTTPStatusError as exc:
-        detail = exc.response.text.strip()[:300] or exc.response.reason_phrase
-        return f"[AI调用失败] provider={provider}，HTTP {exc.response.status_code}: {detail}"
+        return (
+            f"[AI调用失败] provider={provider}，"
+            f"HTTP {exc.response.status_code} {exc.response.reason_phrase}"
+        )
     except (httpx.HTTPError, ValueError, RuntimeError) as exc:
         return f"[AI调用失败] provider={provider}: {exc}"

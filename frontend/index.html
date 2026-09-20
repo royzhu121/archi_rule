@@ -951,6 +951,7 @@ select option { background: #1a2540; color: var(--text-primary); }
 ══════════════════════════════════════════════ */
 let profilesData = null;
 let currentReview = null;
+let aiInfo = { provider: 'qwen', model: 'qwen-plus' };
 const API = '';
 
 const MODULE_CONFIG = {
@@ -974,8 +975,16 @@ const STATUS_LABELS = {
 ══════════════════════════════════════════════ */
 async function init() {
   try {
-    const res = await fetch(`${API}/api/tenant-profiles`);
-    profilesData = await res.json();
+    const [profilesRes, healthRes] = await Promise.all([
+      fetch(`${API}/api/tenant-profiles`),
+      fetch(`${API}/api/health`),
+    ]);
+    if (!profilesRes.ok) throw new Error(`HTTP ${profilesRes.status}`);
+    profilesData = await profilesRes.json();
+    if (healthRes.ok) {
+      const health = await healthRes.json();
+      if (health.ai) aiInfo = health.ai;
+    }
     populateTenant1();
     setStatus('系统就绪', 'green');
   } catch(e) {
@@ -1332,12 +1341,21 @@ function buildRefsHTML(refs) {
 }
 
 function buildLLMSection(opinion) {
+  const providerLabels = {
+    qwen: { badge: 'QWEN', title: '千问 AI 综合审查意见' },
+    mimo: { badge: 'XIAOMI MIMO', title: 'MiMo AI 综合审查意见' },
+    zhipu: { badge: 'ZHIPU GLM', title: '智谱 AI 综合审查意见' },
+  };
+  const label = providerLabels[aiInfo.provider] || {
+    badge: String(aiInfo.provider || 'AI').toUpperCase(),
+    title: 'AI 综合审查意见',
+  };
   const div = document.createElement('div');
   div.className = 'llm-section';
   div.innerHTML = `
     <div class="llm-header">
-      <span class="llm-badge">XIAOMI MIMO</span>
-      <span class="llm-title">AI 综合审查意见</span>
+      <span class="llm-badge">${escHtml(label.badge)}</span>
+      <span class="llm-title">${escHtml(label.title)}</span>
     </div>
     <div class="llm-body">${escHtml(opinion)}</div>
   `;
