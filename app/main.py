@@ -11,7 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.models import ReviewRequest, ReviewResult
 from app.rules.engine import run_review
 from app.llm.zhipu_client import generate_llm_opinion
-from app.rules.tenant_profiles import LEVEL1_TO_LEVEL2, TENANT_PROFILES
+from app.rules.tenant_profiles import (
+    LEVEL1_TO_LEVEL2,
+    PROJECT_SPRINKLER_DESIGNS,
+    TENANT_PROFILES,
+)
 import config as cfg
 
 app = FastAPI(
@@ -49,9 +53,13 @@ async def get_tenant_profiles():
     return {
         "level1_options": list(LEVEL1_TO_LEVEL2.keys()),
         "level1_to_level2": LEVEL1_TO_LEVEL2,
+        "project_sprinkler_design_basis": PROJECT_SPRINKLER_DESIGNS,
         "profiles": {
             k: {
                 "sprinkler_hazard": v.get("sprinkler_hazard"),
+                "normative_sprinkler_hazard": v.get("normative_sprinkler_hazard"),
+                "sprinkler_basis": v.get("sprinkler_basis"),
+                "sprinkler_design": v.get("sprinkler_design"),
                 "auto_review": v.get("auto_review"),
                 "fire_risk": v.get("fire_risk"),
                 "description": v.get("description", ""),

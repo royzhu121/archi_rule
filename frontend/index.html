@@ -135,6 +135,8 @@ body::before {
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 0;
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
   min-height: calc(100vh - 64px);
 }
 
@@ -145,9 +147,12 @@ body::before {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   overflow-y: auto;
-  padding: 24px;
+  padding: 24px 24px max(24px, calc(env(safe-area-inset-bottom) + 24px));
   display: flex; flex-direction: column; gap: 16px;
-  position: sticky; top: 64px; height: calc(100vh - 64px);
+  position: sticky; top: 64px;
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+  scroll-padding-bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
 }
 .input-panel::-webkit-scrollbar { width: 4px; }
 .input-panel::-webkit-scrollbar-track { background: transparent; }
@@ -343,6 +348,7 @@ select option { background: #1a2540; color: var(--text-primary); }
   cursor: pointer; letter-spacing: 0.05em;
   transition: all var(--transition);
   position: relative; overflow: hidden;
+  flex-shrink: 0;
 }
 .submit-btn::before {
   content: '';
@@ -376,6 +382,9 @@ select option { background: #1a2540; color: var(--text-primary); }
 .results-panel {
   padding: 24px 28px;
   overflow-y: auto;
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+  overscroll-behavior: contain;
 }
 
 /* 空状态 */
@@ -680,8 +689,18 @@ select option { background: #1a2540; color: var(--text-primary); }
   .modules-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
-  .app-layout { grid-template-columns: 1fr; }
-  .input-panel { position: static; height: auto; }
+  .app-layout { grid-template-columns: 1fr; height: auto; }
+  .input-panel {
+    position: static;
+    height: auto;
+    overflow-y: visible;
+    padding-bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
+  }
+  .results-panel {
+    height: auto;
+    overflow-y: visible;
+    padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 28px));
+  }
 }
 </style>
 </head>
@@ -1004,13 +1023,13 @@ function onTenant2Change() {
     badge.style.background = 'rgba(239,68,68,0.08)';
     badge.style.border = '1px solid rgba(239,68,68,0.3)';
     badge.style.color = '#FCA5A5';
-    badge.textContent = '⚠ 该业态将触发转人工复核';
+    badge.textContent = `⚠ 该业态将触发转人工复核 · 规范分类：${p.normative_sprinkler_hazard || '需复核'}`;
   } else {
     const riskColors = { low: 'var(--green)', medium_low: 'var(--amber)', medium: 'var(--amber)' };
     badge.style.background = 'rgba(16,185,129,0.06)';
     badge.style.border = '1px solid rgba(16,185,129,0.2)';
     badge.style.color = 'var(--green)';
-    badge.textContent = `✓ 可自动审查 · 喷淋危险等级：${p.sprinkler_hazard || '中危险级I'}`;
+    badge.textContent = `✓ 可自动审查 · 规范分类：${p.normative_sprinkler_hazard || '需复核'} · 项目采用：${p.sprinkler_hazard || '需复核'}`;
   }
 }
 
