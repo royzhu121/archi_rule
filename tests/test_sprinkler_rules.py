@@ -35,17 +35,17 @@ class SprinklerProfileTests(unittest.TestCase):
                         profile["sprinkler_design"]["hazard"],
                     )
 
-    def test_ordinary_retail_separates_normative_and_project_levels(self):
+    def test_ordinary_retail_uses_large_mall_normative_and_project_levels(self):
         profile = get_profile("服装/鞋履/箱包/化妆品/珠宝/钟表")
-        self.assertEqual("中危险级I", profile["normative_sprinkler_hazard"])
+        self.assertEqual("中危险级II", profile["normative_sprinkler_hazard"])
         self.assertEqual("中危险级II", profile["sprinkler_hazard"])
         self.assertEqual("8×1.3 L/(min·㎡)", profile["sprinkler_design"]["spray_intensity"])
 
         result = check_sprinkler(request_for("服装/鞋履/箱包/化妆品/珠宝/钟表"), profile)
         self.assertEqual("中危险级II", result.calculations["hazard_level"])
-        self.assertEqual("中危险级I", result.calculations["normative_hazard_level"])
+        self.assertEqual("中危险级II", result.calculations["normative_hazard_level"])
         self.assertEqual(11.5, result.calculations["max_area_per_head"])
-        self.assertTrue(any("规范危险等级：中危险级I" in item for item in result.details))
+        self.assertTrue(any("固定建筑边界下的审查分类：中危险级II" in item for item in result.details))
         self.assertTrue(any("本项目原设计采用：中危险级II" in item for item in result.details))
 
     def test_key_project_areas_match_design_description(self):

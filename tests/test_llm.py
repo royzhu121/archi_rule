@@ -74,8 +74,9 @@ def test_mimo_http_failure_is_explicit(monkeypatch):
     request, result = _review_pair()
 
     opinion = zhipu_client.generate_llm_opinion(request, result)
-    assert opinion.startswith("[AI调用失败] provider=mimo，HTTP 401:")
-    assert "invalid credential" in opinion
+    assert opinion == "[AI调用失败] provider=mimo，HTTP 401 Unauthorized"
+    assert "invalid credential" not in opinion
+    assert "bad-key" not in opinion
 
 
 def test_mimo_missing_key_is_explicit_without_network(monkeypatch):
