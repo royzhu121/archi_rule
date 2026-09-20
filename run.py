@@ -11,7 +11,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_dependencies():
     try:
-        import fastapi, uvicorn, zhipuai, pydantic
+        import fastapi, uvicorn, httpx, docx, pydantic
     except ImportError:
         print("正在安装依赖（安装失败不影响启动，可手动运行 pip install -r requirements.txt）...")
         try:
@@ -23,19 +23,18 @@ def main():
     check_dependencies()
 
     import config as cfg
-    if cfg.ZHIPU_API_KEY == "your_api_key_here":
+    ai = cfg.get_ai_config()
+    if not ai["configured"]:
         print("=" * 60)
-        print("⚠  提示：未配置智谱 GLM API Key")
-        print("   请在 config.py 中修改 ZHIPU_API_KEY，或创建 .env 文件：")
-        print("   ZHIPU_API_KEY=your_actual_key")
-        print("   ZHIPU_MODEL=glm-4-plus")
-        print("   (规则引擎仍可正常运行，GLM综合意见将显示提示)")
+        print(f"⚠  提示：未配置 {ai['provider']} API Key")
+        print("   请复制 .env.example 为 .env 并仅在环境变量中填写密钥。")
+        print("   规则引擎仍可运行，AI 综合意见会明确显示未配置状态。")
         print("=" * 60)
 
     import uvicorn
     print(f"\n🔥 消防审图系统启动中...")
     print(f"   地址: http://{cfg.HOST}:{cfg.PORT}")
-    print(f"   模型: {cfg.ZHIPU_MODEL}")
+    print(f"   AI: {ai['provider']} / {ai['model']}")
     print(f"   按 Ctrl+C 停止\n")
     uvicorn.run(
         "app.main:app",

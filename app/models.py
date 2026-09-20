@@ -65,5 +65,10 @@ class ReviewResult(BaseModel):
     # 第三层高亮汇总
     highlights: List[str]
 
-    # GLM生成的最终综合意见
+    # AI 生成的最终综合意见；失败或未配置时包含明确状态文本
     llm_opinion: Optional[str] = None
+
+
+class ReviewReportRequest(BaseModel):
+    request: ReviewRequest
+    result: ReviewResult

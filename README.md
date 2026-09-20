@@ -1,6 +1,6 @@
 # 🔥 FireCheck Pro
 
-**租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 智谱 GLM
+**租户二次消防审图 Web 工具** · 耐火等级一级大型商业综合体 · 规则引擎 + 小米 MiMo
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)
@@ -10,7 +10,7 @@
 
 ## 简介
 
-FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户二次装修**消防快速审查场景而设计。输入租户业态与改造信息，系统自动输出六大消防专业的审查结论、整改建议与规范依据，并由智谱 GLM 生成综合审查意见。
+FireCheck Pro 专用于一座已建成投运、耐火等级一级的**多层民用建筑大型商业综合体**租户二次装修消防快速审查。既有自动喷淋、火灾报警、机械排烟和消火栓等设施均已完整设置，且装修不得改变防火分区或防烟分区主边界。系统输出六大专业审查结果、整改建议、规范核验摘要，并由小米 MiMo 生成辅助意见。
 
 > **目标覆盖约 80% 的常规租户场景，不替代完整人工审图。**
 
@@ -26,7 +26,8 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 | 4 | 🚨 **火灾自动报警** | 探测器类型 / 数量；应急广播功率；手报步行距离校核 |
 | 5 | 💡 **应急照明 & 疏散指示** | 出口标志数量 / 规格；连续性校核；补设位置提示 |
 | 6 | 🧯 **消火栓 & 灭火器** | 火灾类别确认；保护距离校核；设置条件核查 |
-| ★ | 🤖 **AI 综合意见** | 智谱 GLM-4-plus 生成完整综合审查意见 |
+| ★ | 🤖 **AI 综合意见** | 小米 MiMo 生成辅助综合意见，失败时明确显示原因 |
+| ★ | 📄 **Word 报告** | 下载包含项目信息、结论、计算、建议、依据及免责声明的 A4 报告 |
 
 ---
 
@@ -34,6 +35,8 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 
 ### ✅ 可自动审图的前提条件
 
+- 仅用于上述已建成投运的大型商业综合体，不适用于独立小型商店、其他建筑或新建工程
+- 既有自动喷淋、火灾报警、机械排烟、消火栓等设施完整设置
 - 不改变防火分区 / 防烟分区主边界
 - 不涉及专项审批、性能化设计、专家论证
 - 不涉及中庭、步行街、共享疏散、异形大空间等复杂场景
@@ -77,7 +80,7 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 
 ### 喷淋等级与项目设计参数
 
-系统分别展示**规范危险等级**和**项目原设计采用值**：前者依据仓库内 `GB50084-2017_6.1.1` 的分类数据，后者来自本项目设计说明，仅用于核对既有系统，不能作为其他项目的通用规范参数。普通商店、非仓储式超市及无明火轻餐饮的规范分类为中危险级 I；本项目 MALL 商铺、餐厅原设计按中危险级 II，二次装修校核采用不低于原设计的参数。
+系统分别展示**固定建筑边界下的审查分类**和**项目原设计采用值**。依据 GB 50084-2017 附录 A“总建筑面积 5000㎡及以上的商场”，本大型商业综合体内服装、鞋履等普通 MALL 零售商铺按中危险级 II；不得拆分为独立小型商店后显示中危险级 I。项目设计说明同时将 MALL 商铺列为中危险级 II，二次装修按 8×1.3 L/(min·㎡)、作用面积 160㎡、设计流量 30 L/s、K80 快速响应喷头校核。仓库条文内容均为核验摘要，不称作规范原文。
 
 | 项目设计区域 | 危险等级 | 喷水强度 | 作用面积 | 设计流量 | 喷头及布置 |
 |------|------|------|------|------|------|
@@ -126,8 +129,9 @@ FireCheck Pro 专为公司下辖已建成投运的**大型商业综合体租户�
 |------|------|
 | 后端 | Python 3.11+ · FastAPI · Uvicorn |
 | 前端 | 原生 HTML / CSS / JavaScript（无框架） |
-| AI   | 智谱 GLM-4-plus（[open.bigmodel.cn](https://open.bigmodel.cn/)） |
-| 规范库 | 内置 GB50016 / GB50084 / GB50116 / GB50222 / GB50974 / GB51251 / GB51309 |
+| AI   | 小米 MiMo OpenAI 兼容 API；兼容旧智谱环境变量 |
+| 报告 | python-docx 生成 A4 `.docx` |
+| 规范库 | GB50016 / GB50084 / GB50116 / GB50222 / GB50974 / GB51251 / GB51309 核验摘要 |
 
 ---
 
@@ -148,20 +152,18 @@ pip install -r requirements.txt
 
 ### 3. 配置 API Key
 
-方式 A — 修改 `config.py`：
-
-```python
-ZHIPU_API_KEY = "your_api_key_here"
-```
-
-方式 B — 创建 `.env`（推荐）：
+复制 `.env.example` 为 `.env`，密钥不得写入代码或提交：
 
 ```env
-ZHIPU_API_KEY=your_api_key_here
-ZHIPU_MODEL=glm-4-plus
+AI_PROVIDER=mimo
+MIMO_API_KEY=your_api_key
+MIMO_MODEL=mimo-v2.5-pro
+MIMO_BASE_URL=https://api.xiaomimimo.com/v1
 ```
 
-> 未配置 API Key 时规则引擎仍正常运行，仅 AI 综合意见部分不可用。
+默认值依据小米官方文档：[首次 API 调用](https://mimo.mi.com/static/docs/quick-start/summary/first-api-call.md)、[模型选择](https://mimo.mi.com/static/docs/quick-start/summary/model.md)及 [OpenAI Chat Completions](https://mimo.mi.com/static/docs/api/chat/openai-api.md)。Token Plan 用户须将 `MIMO_BASE_URL` 改为控制台显示的专用区域地址。
+
+旧部署可继续设置 `AI_PROVIDER=zhipu`、`ZHIPU_API_KEY`、`ZHIPU_MODEL` 和 `ZHIPU_BASE_URL`。未配置密钥时规则引擎仍运行，但 AI 字段明确返回未配置状态；不会伪造成功。
 
 ### 4. 启动
 
@@ -179,7 +181,8 @@ python run.py
 archi_rule/
 ├── app/
 │   ├── llm/
-│   │   └── zhipu_client.py       # 智谱 GLM 调用
+│   │   └── zhipu_client.py       # MiMo/智谱 OpenAI 兼容调用（保留旧模块路径）
+│   ├── reports.py                # A4 Word 报告
 │   ├── rules/
 │   │   ├── engine.py             # 六大专业规则引擎
 │   │   └── tenant_profiles.py    # 业态画像库
@@ -204,6 +207,7 @@ archi_rule/
 | `GET` | `/` | Web 前端 |
 | `GET` | `/api/tenant-profiles` | 业态下拉菜单数据 |
 | `POST` | `/api/review` | 提交审图参数，返回六模块结论 |
+| `POST` | `/api/review/report` | 根据当前审图请求与结果下载 `.docx` |
 | `GET` | `/api/health` | 服务健康检查 |
 
 ---

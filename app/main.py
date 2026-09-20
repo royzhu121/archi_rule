@@ -3,14 +3,16 @@ FastAPI 主程序
 """
 
 import os
+from urllib.parse import quote
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import ReviewRequest, ReviewResult
+from app.models import ReviewReportRequest, ReviewRequest, ReviewResult
 from app.rules.engine import run_review
 from app.llm.zhipu_client import generate_llm_opinion
+from app.reports import build_review_report
 from app.rules.tenant_profiles import (
     LEVEL1_TO_LEVEL2,
     PROJECT_SPRINKLER_DESIGNS,
@@ -77,17 +79,40 @@ async def review(req: ReviewRequest):
     # 1. 规则引擎计算
     result = run_review(req)
 
-    # 2. GLM生成综合意见（失败不影响主结论）
+    # 2. AI 生成综合意见；失败会以明确状态文本返回，不改变规则结论。
     opinion = generate_llm_opinion(req, result)
     result.llm_opinion = opinion
 
     return result
 
 
+@app.post("/api/review/report")
+async def download_review_report(payload: ReviewReportRequest):
+    """根据当前页面已展示的审图结果生成 Word，避免重复调用 AI。"""
+    try:
+        report = build_review_report(payload)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Word 报告生成失败：{exc}") from exc
+    safe_site = "".join(ch for ch in payload.request.site if ch not in '\\/:*?"<>|').strip() or "项目"
+    filename = f"{safe_site}-消防审图结果.docx"
+    disposition = f"attachment; filename=fire-review.docx; filename*=UTF-8''{quote(filename)}"
+    return StreamingResponse(
+        report,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": disposition},
+    )
+
+
 @app.get("/api/health")
 async def health():
+    ai = cfg.get_ai_config()
     return {
         "status": "ok",
-        "model": cfg.ZHIPU_MODEL,
+        "ai": {
+            "provider": ai["provider"],
+            "model": ai["model"],
+            "base_url": ai["base_url"],
+            "configured": ai["configured"],
+        },
         "building_context": cfg.BUILDING_CONTEXT["description"],
     }
